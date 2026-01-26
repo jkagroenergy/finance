@@ -196,7 +196,6 @@ function selectEntity(entityId, event) {
     const entity = entitiesData.find(e => e.id === entityId);
     if (entity) {
         updateBreadcrumb(entity);
-        // showNotification(`Selected: ${entity.name}`, 'success');
     }
 }
 
