@@ -196,7 +196,7 @@ function selectEntity(entityId, event) {
     const entity = entitiesData.find(e => e.id === entityId);
     if (entity) {
         updateBreadcrumb(entity);
-        showNotification(`Selected: ${entity.name}`, 'success');
+        // showNotification(`Selected: ${entity.name}`, 'success');
     }
 }
 
@@ -380,7 +380,6 @@ function getEntityTypeLabel(entityType) {
 function showNotification(message, type = 'info') {
     // Simple notification - can be enhanced with a toast library
     console.log(`[${type.toUpperCase()}] ${message}`);
-    alert(message);
 }
 
 // ==================== REFRESH ENTITIES WHEN RETURNING FROM ENTITY MANAGEMENT ====================
