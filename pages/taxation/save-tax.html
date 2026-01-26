@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Save Tax | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            /* Revised purple color scheme from index.html */
+            --brand-purple-1: #5b3bd6; /* deep */
+            --brand-purple-2: #7b5cf2; /* mid */
+            --brand-purple-3: #8b6ff8; /* light */
+            --accent-green: #1fc08b;
+
+            /* Semantic aliases */
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+            --font-scale: 0.95;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: var(--light);
+            color: var(--secondary);
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 1300px;
+            margin: auto;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .tax-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .tax-option-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .tax-option-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            border-color: var(--primary);
+        }
+
+        .tax-option-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .tax-option-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 8px;
+        }
+
+        .tax-option-card p {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 12px;
+            min-height: 40px;
+        }
+
+        .tax-option-indicator {
+            display: inline-block;
+            font-size: 12px;
+            padding: 6px 12px;
+            background: #dbeafe;
+            color: var(--primary);
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .tax-savings-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        #taxOptionDetails {
+            display: none;
+        }
+
+        h3 {
+            font-size: 24px;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        #optionEligible,
+        #optionNotes {
+            color: #64748b;
+            padding-left: 20px;
+        }
+
+        #optionEligible li,
+        #optionNotes li {
+            margin-bottom: 8px;
+        }
+
+        .calculator-section {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--secondary);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #cbd5e1;
+        }
+
+        #savingsResult {
+            display: none;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--success);
+            margin-bottom: 30px;
+        }
+
+        .savings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .savings-item {
+            text-align: center;
+        }
+
+        .savings-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .savings-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .savings-value.success {
+            color: var(--success);
+        }
+
+        .back-button {
+            background: #f1f5f9;
+            color: var(--secondary);
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: #e2e8f0;
+        }
+
+        .description {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .tax-options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb { background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border: 1px solid #e0d8f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+        .breadcrumb-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .breadcrumb-entity-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .breadcrumb-entity-type { background: #e9e5ff; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+<div class="container">
+    <div style="padding: 30px 0;">
+        <h2>Tax Saving Strategies</h2>
+        <p class="subtitle">Explore various tax-saving options available under Indian tax laws and calculate your potential savings</p>
+    </div>
+
+    <div class="tax-options-grid" id="taxOptionsContainer">
+        <!-- Section 80C -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section80c')">
+            <div class="tax-option-icon">💰</div>
+            <h3>Section 80C</h3>
+            <p>Life Insurance, PPF, ELSS, Tuition Fees</p>
+            <div class="tax-option-indicator">Max Deduction: ₹1,50,000</div>
+        </div>
+
+        <!-- Section 80D -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section80d')">
+            <div class="tax-option-icon">🏥</div>
+            <h3>Section 80D</h3>
+            <p>Health Insurance Premiums</p>
+            <div class="tax-option-indicator">Max Deduction: ₹25,000-1,00,000</div>
+        </div>
+
+        <!-- Section 80E -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section80e')">
+            <div class="tax-option-icon">🎓</div>
+            <h3>Section 80E</h3>
+            <p>Education Loan Interest</p>
+            <div class="tax-option-indicator">No Maximum Limit</div>
+        </div>
+
+        <!-- Section 80G -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section80g')">
+            <div class="tax-option-icon">❤️</div>
+            <h3>Section 80G</h3>
+            <p>Charitable Donations</p>
+            <div class="tax-option-indicator">50%-100% Deduction</div>
+        </div>
+
+        <!-- Section 80CCD -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section80ccd')">
+            <div class="tax-option-icon">🎯</div>
+            <h3>Section 80CCD(1B)</h3>
+            <p>NPS Contribution (Additional)</p>
+            <div class="tax-option-indicator">Max Deduction: ₹50,000</div>
+        </div>
+
+        <!-- Section 24 -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section24')">
+            <div class="tax-option-icon">🏠</div>
+            <h3>Section 24</h3>
+            <p>Home Loan Interest & Principal</p>
+            <div class="tax-option-indicator">Interest: No Limit, Principal: ₹1,50,000</div>
+        </div>
+
+        <!-- Standard Deduction -->
+        <div class="tax-option-card" onclick="toggleTaxOption('standarddeduction')">
+            <div class="tax-option-icon">✅</div>
+            <h3>Standard Deduction</h3>
+            <p>Automatic Deduction for Salaried</p>
+            <div class="tax-option-indicator">Fixed Amount: ₹50,000</div>
+        </div>
+
+        <!-- Section 87A -->
+        <div class="tax-option-card" onclick="toggleTaxOption('section87a')">
+            <div class="tax-option-icon">📊</div>
+            <h3>Rebate Section 87A</h3>
+            <p>Rebate for Income up to ₹5 Lakhs</p>
+            <div class="tax-option-indicator">Full Tax Rebate (if eligible)</div>
+        </div>
+    </div>
+
+    <!-- Tax Option Details -->
+    <div id="taxOptionDetails">
+        <div class="tax-savings-card">
+            <h3 id="optionTitle"></h3>
+            
+            <div style="margin-bottom: 30px;">
+                <h4>About this option:</h4>
+                <p id="optionDescription" class="description"></p>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <h4>Eligible Investments/Expenses:</h4>
+                <ul id="optionEligible"></ul>
+            </div>
+
+            <div class="calculator-section">
+                <h4>Calculate Your Savings</h4>
+                <div class="calculator-grid">
+                    <div>
+                        <label for="investmentAmount">Amount Invested/Spent (₹)</label>
+                        <input type="number" id="investmentAmount" placeholder="Enter amount" onchange="calculateTaxSavings()">
+                    </div>
+                    <div>
+                        <label for="taxSlab">Your Tax Slab (%)</label>
+                        <select id="taxSlab" onchange="calculateTaxSavings()">
+                            <option value="">Select your tax slab</option>
+                            <option value="0">0% (Up to ₹3,00,000)</option>
+                            <option value="5">5% (₹3,00,001 - ₹7,50,000)</option>
+                            <option value="10">10% (₹7,50,001 - ₹10,00,000)</option>
+                            <option value="15">15% (₹10,00,001 - ₹12,50,000)</option>
+                            <option value="20">20% (₹12,50,001 - ₹15,00,000)</option>
+                            <option value="25">25% (Above ₹15,00,000)</option>
+                            <option value="30">30% (Highest Slab)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="savingsResult">
+                <h4>Your Potential Tax Savings</h4>
+                <div class="savings-grid">
+                    <div class="savings-item">
+                        <div class="savings-label">Tax Deduction Amount</div>
+                        <div class="savings-value" id="deductionAmount">₹ 0</div>
+                    </div>
+                    <div class="savings-item">
+                        <div class="savings-label">Tax Saved</div>
+                        <div class="savings-value success" id="taxSaved">₹ 0</div>
+                    </div>
+                    <div class="savings-item">
+                        <div class="savings-label">Effective Return</div>
+                        <div class="savings-value" id="effectiveReturn">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4>Important Notes:</h4>
+                <ul id="optionNotes"></ul>
+            </div>
+
+            <button class="back-button" onclick="closeOptionDetails()">Back to Options</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const taxOptions = {
+        section80c: {
+            title: 'Section 80C - Investments & Life Insurance',
+            description: 'Section 80C allows you to claim a deduction of up to ₹1,50,000 per financial year for investments in life insurance premiums, public provident fund (PPF), equity linked savings scheme (ELSS), national savings certificate, and tuition fees.',
+            eligible: [
+                'Life Insurance Premiums',
+                'Public Provident Fund (PPF)',
+                'Equity Linked Savings Scheme (ELSS)',
+                'National Savings Certificate (NSC)',
+                'Post Office Monthly Income Scheme',
+                'Senior Citizens Savings Scheme',
+                'Tuition Fees (excluding transport & hostel)',
+                'Principal Repayment of Education Loan'
+            ],
+            maxDeduction: 150000,
+            notes: [
+                'Only the principal amount of investments counts, not the returns',
+                'Life insurance premiums for yourself and dependent children qualify',
+                'Cannot claim for tuition fees of your own education',
+                'Self-Invested Personal Pension (SIPP) also qualifies'
+            ]
+        },
+        section80d: {
+            title: 'Section 80D - Health Insurance Premiums',
+            description: 'Section 80D provides a deduction for health insurance premiums paid for yourself and your family members. This is one of the most beneficial deductions for salaried individuals.',
+            eligible: [
+                'Health Insurance Premiums (Self & Spouse)',
+                'Health Insurance for Dependent Children',
+                'Health Insurance for Parents',
+                'Critical Illness Insurance Premiums',
+                'Senior Citizen Health Insurance'
+            ],
+            maxDeduction: 100000,
+            maxDeductionSenior: 100000,
+            notes: [
+                'Individuals: ₹25,000, Senior Citizens (60+ years): ₹50,000',
+                'Parents: ₹25,000 (₹50,000 for senior citizen parents)',
+                'Mediclaim premiums paid in cash without bill are not deductible',
+                'Includes premiums for any mediclaim policy on any member of family'
+            ]
+        },
+        section80e: {
+            title: 'Section 80E - Education Loan Interest',
+            description: 'Section 80E allows deduction of interest paid on education loans taken for higher education of yourself or any dependent. There is no maximum limit on this deduction.',
+            eligible: [
+                'Education Loan Interest (No Maximum Limit)',
+                'Loans for your own higher education',
+                'Loans for dependent children education',
+                'Loans from banks or financial institutions'
+            ],
+            maxDeduction: null,
+            notes: [
+                'Deduction is available for 8 financial years from the year in which repayment begins',
+                'Only interest, not the principal, is deductible',
+                'Applicable only if you have borrowed during that financial year',
+                'Must be for higher education in India or abroad'
+            ]
+        },
+        section80g: {
+            title: 'Section 80G - Charitable Donations',
+            description: 'Section 80G allows a deduction for contributions made to approved charitable organizations. The deduction can be 50% or 100% depending on the type of organization.',
+            eligible: [
+                'Donations to Approved Charities (50% Deduction)',
+                'Donations to Prime Minister\'s Relief Fund (100% Deduction)',
+                'Donations to National Defence Fund (100% Deduction)',
+                'Donations to Government Educational Institutions (50% Deduction)',
+                'Donations to Political Parties (100% Deduction)'
+            ],
+            maxDeduction: null,
+            notes: [
+                '50% Deduction: For most approved charitable organizations',
+                '100% Deduction: For PMRF, NDF, political parties',
+                'Donation must be made to PAN-registered organizations',
+                'Cash donations beyond ₹2,000 must be made through check/bank transfer'
+            ]
+        },
+        section80ccd: {
+            title: 'Section 80CCD(1B) - NPS Contribution (Additional)',
+            description: 'Section 80CCD(1B) provides an additional deduction of up to ₹50,000 for contributions to National Pension System (NPS), over and above the Section 80C limit.',
+            eligible: [
+                'NPS (Tier I) Additional Contribution',
+                'NPS contribution beyond Section 80C limit',
+                'Tier I accounts for retirement planning'
+            ],
+            maxDeduction: 50000,
+            notes: [
+                'Additional deduction of ₹50,000 beyond the ₹1,50,000 limit of Section 80C',
+                'Applicable only if you have contributed to NPS',
+                'Cannot claim if investment is not made during the financial year',
+                'Total deduction under Section 80C and 80CCD(1B) cannot exceed ₹2,00,000'
+            ]
+        },
+        section24: {
+            title: 'Section 24 - Home Loan Interest & Principal',
+            description: 'Section 24 allows deduction of interest paid on home loans and principal repayment for self-occupied property. Principal is limited to ₹1,50,000 per year.',
+            eligible: [
+                'Home Loan Interest (No Limit)',
+                'Home Loan Principal Repayment (₹1,50,000 per year)',
+                'Interest on loans from banks or HFCs',
+                'Self-occupied residential property'
+            ],
+            maxDeduction: 150000,
+            notes: [
+                'Interest on home loans has no maximum limit',
+                'Principal repayment limited to ₹1,50,000 per annum',
+                'Only for self-occupied property (one property)',
+                'If property is let out, only interest is deductible under Section 24'
+            ]
+        },
+        standarddeduction: {
+            title: 'Standard Deduction',
+            description: 'A standard deduction is automatically available to salaried individuals and pensioners. For FY 2024-25, it is ₹50,000 without any documentation required.',
+            eligible: [
+                'Available to all Salaried Employees',
+                'Available to all Pensioners',
+                'Fixed Amount: ₹50,000',
+                'Automatic - No proof required'
+            ],
+            maxDeduction: 50000,
+            notes: [
+                'Applicable to salary and pension income only',
+                'Cannot claim both standard deduction and actual deductions from salary',
+                'Most beneficial for those with low actual deductions',
+                'Automatically allowed without filing any documentation'
+            ]
+        },
+        section87a: {
+            title: 'Rebate Section 87A - Full Tax Rebate',
+            description: 'Section 87A provides a full tax rebate for individuals with total income up to ₹5 lakhs. If your income is up to ₹5 lakhs, you pay zero tax.',
+            eligible: [
+                'Applicable for Income up to ₹5,00,000',
+                'Full Tax Exemption if eligible',
+                'For Indian Residents',
+                'No minimum age requirement'
+            ],
+            maxDeduction: null,
+            notes: [
+                'Full tax rebate for income up to ₹5,00,000',
+                'No cess payable for income up to ₹5,00,000',
+                'Must be an Indian resident to claim this rebate',
+                'Medical expenditure rebate also available for senior citizens'
+            ]
+        }
+    };
+
+    function toggleTaxOption(optionKey) {
+        const option = taxOptions[optionKey];
+        if (!option) return;
+
+        document.getElementById('optionTitle').textContent = option.title;
+        document.getElementById('optionDescription').textContent = option.description;
+
+        const eligibleList = document.getElementById('optionEligible');
+        eligibleList.innerHTML = '';
+        option.eligible.forEach(item => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '8px';
+            li.textContent = item;
+            eligibleList.appendChild(li);
+        });
+
+        const notesList = document.getElementById('optionNotes');
+        notesList.innerHTML = '';
+        option.notes.forEach(item => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '8px';
+            li.textContent = item;
+            notesList.appendChild(li);
+        });
+
+        // Reset form
+        document.getElementById('investmentAmount').value = '';
+        document.getElementById('taxSlab').value = '';
+        document.getElementById('savingsResult').style.display = 'none';
+
+        // Show details section
+        document.getElementById('taxOptionDetails').style.display = 'block';
+        window.scrollTo(0, document.getElementById('taxOptionDetails').offsetTop - 100);
+    }
+
+    function closeOptionDetails() {
+        document.getElementById('taxOptionDetails').style.display = 'none';
+        window.scrollTo(0, 0);
+    }
+
+    function calculateTaxSavings() {
+        const investmentAmount = parseFloat(document.getElementById('investmentAmount').value) || 0;
+        const taxSlab = parseFloat(document.getElementById('taxSlab').value);
+
+        if (!investmentAmount || taxSlab === '') {
+            document.getElementById('savingsResult').style.display = 'none';
+            return;
+        }
+
+        // Get current option details
+        let maxDeduction = 150000;
+        const optionKey = getActiveOptionKey();
+        if (optionKey && taxOptions[optionKey]) {
+            maxDeduction = taxOptions[optionKey].maxDeduction || investmentAmount;
+        }
+
+        const deductionAmount = Math.min(investmentAmount, maxDeduction || investmentAmount);
+        const taxSaved = deductionAmount * (taxSlab / 100);
+        const effectiveReturn = investmentAmount > 0 ? ((taxSaved / investmentAmount) * 100).toFixed(2) : 0;
+
+        document.getElementById('deductionAmount').textContent = '₹ ' + deductionAmount.toLocaleString('en-IN');
+        document.getElementById('taxSaved').textContent = '₹ ' + taxSaved.toLocaleString('en-IN', {maximumFractionDigits: 0});
+        document.getElementById('effectiveReturn').textContent = effectiveReturn + '%';
+        document.getElementById('savingsResult').style.display = 'block';
+    }
+
+    function getActiveOptionKey() {
+        const title = document.getElementById('optionTitle').textContent;
+        for (const key in taxOptions) {
+            if (taxOptions[key].title === title) {
+                return key;
+            }
+        }
+        return null;
+    }
+</script>
+
+</body>
+</html>

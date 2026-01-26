@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Investment Warnings | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .warnings-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .warning-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--warning);
+            display: none;
+        }
+
+        .warning-card.active {
+            display: block;
+        }
+
+        .warning-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .warning-card.success {
+            border-left-color: var(--success);
+        }
+
+        .warning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .warning-icon {
+            font-size: 32px;
+        }
+
+        .warning-severity {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .severity-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .severity-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .severity-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .warning-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .warning-description {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .warning-details {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .impact-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .impact-label {
+            min-width: 80px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .impact-value {
+            flex: 1;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .impact-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-dismiss {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .summary-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .summary-cards { grid-template-columns: 1fr; }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb { background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border: 1px solid #e0d8f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+        .breadcrumb-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .breadcrumb-entity-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .breadcrumb-entity-type { background: #e9e5ff; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>⚠️ Investment Warnings & Alerts</h1>
+    <p class="subtitle">Real-time alerts to help you avoid costly mistakes and stay on track with your goals</p>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="summary-number" id="dangerCount">0</div>
+            <div class="summary-label">Critical Issues</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="warningCount">0</div>
+            <div class="summary-label">Warnings</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="infoCount">0</div>
+            <div class="summary-label">Suggestions</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-number" id="successCount">0</div>
+            <div class="summary-label">Good News</div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-secondary" onclick="dismissAllAlerts()">Dismiss All</button>
+        <button class="btn btn-secondary" onclick="refreshAlerts()">Refresh Alerts</button>
+    </div>
+
+    <div class="filter-tabs">
+        <button class="tab active" onclick="switchTab('all', event)">All Alerts</button>
+        <button class="tab" onclick="switchTab('danger', event)">Critical</button>
+        <button class="tab" onclick="switchTab('warning', event)">Warnings</button>
+        <button class="tab" onclick="switchTab('info', event)">Suggestions</button>
+        <button class="tab" onclick="switchTab('success', event)">Good News</button>
+    </div>
+
+    <div class="warnings-grid" id="warningsGrid">
+        <!-- Warnings will be loaded here -->
+    </div>
+</div>
+
+<script>
+    const allAlerts = [
+        {
+            type: 'danger',
+            icon: '🚨',
+            title: 'Over-Concentration Risk Detected',
+            severity: 'CRITICAL',
+            description: 'Your portfolio is 65% concentrated in HDFC and TCS stocks. Recommended maximum is 20% per holding.',
+            details: 'Concentration: 65% | Recommended: 20% | Risk Impact: High',
+            impact: 65,
+            action: 'Reduce concentration'
+        },
+        {
+            type: 'danger',
+            icon: '📉',
+            title: 'Significant Market Downturn Alert',
+            severity: 'CRITICAL',
+            description: 'Sensex down 3.2% in last 2 hours. Portfolio down ₹2.5L. Monitor for further movement.',
+            details: 'Current Loss: ₹2,50,000 | Sensex Change: -3.2% | Recovery Time: Typically 2-4 weeks',
+            impact: 75,
+            action: 'Review portfolio'
+        },
+        {
+            type: 'warning',
+            icon: '🔄',
+            title: 'Rebalancing Overdue',
+            severity: 'WARNING',
+            description: 'Your portfolio has drifted 8% from target allocation. Last rebalanced 6 months ago.',
+            details: 'Drift Percentage: 8% | Recommended Frequency: Quarterly | Target: 5% threshold',
+            impact: 45,
+            action: 'Rebalance now'
+        },
+        {
+            type: 'warning',
+            icon: '💸',
+            title: 'High-Risk Fund Chasing Returns',
+            severity: 'WARNING',
+            description: 'You purchased Mid-Cap Growth Fund after 40% rally. Historically shows mean reversion.',
+            details: 'Fund Performance: +40% YTD | Peer Comparison: 95th percentile | Historical Pattern: 2-3 year cycles',
+            impact: 55,
+            action: 'Review fund thesis'
+        },
+        {
+            type: 'warning',
+            icon: '📊',
+            title: 'Sector Concentration High',
+            severity: 'WARNING',
+            description: 'Technology sector represents 45% of portfolio. Recommended max is 25-30%.',
+            details: 'Current: 45% | Recommended: 25-30% | Diversification Score: 3/10',
+            impact: 50,
+            action: 'Rebalance sectors'
+        },
+        {
+            type: 'info',
+            icon: '💡',
+            title: 'Tax-Loss Harvesting Opportunity',
+            severity: 'SUGGESTION',
+            description: 'You have ₹1.5L unrealized loss in Smallcap Fund. Can offset recent gains.',
+            details: 'Unrealized Loss: ₹1,50,000 | Potential Tax Saving (30%): ₹45,000 | Wash Sale: 30 days',
+            impact: 35,
+            action: 'Implement strategy'
+        },
+        {
+            type: 'info',
+            icon: '📅',
+            title: 'Lock-in Period Expiring Soon',
+            severity: 'SUGGESTION',
+            description: 'Your ELSS investment lock-in period ends in 15 days. Plan rebalancing.',
+            details: 'Lock-in Expiry: 15 days | Investment Amount: ₹2,00,000 | Current Value: ₹2,45,000',
+            impact: 30,
+            action: 'Plan redemption'
+        },
+        {
+            type: 'success',
+            icon: '✅',
+            title: 'Goal Progress On Track',
+            severity: 'GOOD NEWS',
+            description: 'Education goal has achieved 72% of target with 5 years remaining.',
+            details: 'Target: ₹50,00,000 | Current: ₹36,00,000 | Progress: 72% | Confidence: High',
+            impact: 85,
+            action: 'View details'
+        },
+        {
+            type: 'success',
+            icon: '🎯',
+            title: 'Retirement Goal Ahead of Schedule',
+            severity: 'GOOD NEWS',
+            description: 'At current growth rate, you can retire 3 years earlier than planned.',
+            details: 'Original Target: 2028 | New Target: 2025 | Additional Savings: ₹15L/year',
+            impact: 90,
+            action: 'Explore options'
+        },
+        {
+            type: 'info',
+            icon: '📢',
+            title: 'Market Opportunity: DCA Strategy',
+            severity: 'SUGGESTION',
+            description: 'Market volatility creates opportunity for rupee-cost averaging. Consider increasing SIP.',
+            details: 'Current Volatility (VIX): 18.5 | Historical Avg: 16 | Recommendation: +20% SIP increase',
+            impact: 40,
+            action: 'Increase SIP'
+        }
+    ];
+
+    let activeTab = 'all';
+
+    function initializeAlerts() {
+        renderAlerts();
+        updateSummary();
+    }
+
+    function renderAlerts() {
+        const grid = document.getElementById('warningsGrid');
+        grid.innerHTML = '';
+
+        const filtered = activeTab === 'all' ? allAlerts : allAlerts.filter(a => a.type === activeTab);
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="empty-state">No alerts in this category</div>';
+            return;
+        }
+
+        filtered.forEach((alert, index) => {
+            const severityClass = `severity-${alert.type}`;
+            const card = document.createElement('div');
+            card.className = `warning-card ${alert.type} active`;
+            card.innerHTML = `
+                <div class="warning-header">
+                    <div class="warning-icon">${alert.icon}</div>
+                    <span class="warning-severity ${severityClass}">${alert.severity}</span>
+                </div>
+                <div class="warning-title">${alert.title}</div>
+                <div class="warning-description">${alert.description}</div>
+                <div class="warning-details">${alert.details}</div>
+                <div class="impact-bar">
+                    <span class="impact-label">Impact:</span>
+                    <div class="impact-value">
+                        <div class="impact-fill" style="width: ${alert.impact}%"></div>
+                    </div>
+                    <span style="font-weight:600">${alert.impact}%</span>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-small btn-action" onclick="implementAlert('${alert.title}')">${alert.action}</button>
+                    <button class="btn-small btn-dismiss" onclick="dismissAlert(${index})">Dismiss</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function updateSummary() {
+        document.getElementById('dangerCount').textContent = allAlerts.filter(a => a.type === 'danger').length;
+        document.getElementById('warningCount').textContent = allAlerts.filter(a => a.type === 'warning').length;
+        document.getElementById('infoCount').textContent = allAlerts.filter(a => a.type === 'info').length;
+        document.getElementById('successCount').textContent = allAlerts.filter(a => a.type === 'success').length;
+    }
+
+    function switchTab(tab, event) {
+        activeTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        renderAlerts();
+    }
+
+    function implementAlert(title) {
+        alert(`Taking action on: ${title}`);
+    }
+
+    function dismissAlert(index) {
+        allAlerts.splice(index, 1);
+        renderAlerts();
+        updateSummary();
+    }
+
+    function dismissAllAlerts() {
+        if (confirm('Are you sure you want to dismiss all alerts?')) {
+            allAlerts.length = 0;
+            renderAlerts();
+            updateSummary();
+        }
+    }
+
+    function updateBreadcrumb() {
+        const selectedEntityId = localStorage.getItem('selectedEntity');
+        const breadcrumb = document.getElementById('entityBreadcrumb');
+        
+        if (selectedEntityId && breadcrumb) {
+            const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+            const selectedEntity = entities.find(e => e.id === selectedEntityId);
+            
+            if (selectedEntity) {
+                const entityNameEl = document.getElementById('breadcrumbEntityName');
+                const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                
+                if (entityNameEl && entityTypeEl) {
+                    entityNameEl.textContent = selectedEntity.name;
+                    entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                    breadcrumb.style.display = 'flex';
+                }
+            }
+        }
+    }
+
+    function refreshAlerts() {
+        alert('Alerts refreshed at ' + new Date().toLocaleTimeString());
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBreadcrumb();
+        initializeAlerts();
+    });
+</script>
+
+</body>
+</html>

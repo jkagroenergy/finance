@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recommendations | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .rec-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .rec-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
+        .rec-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .rec-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .rec-priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .priority-low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .rec-description {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+
+        .rec-benefit {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .rec-benefit strong {
+            color: var(--primary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .summary-info {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .summary-info h2 {
+            margin-bottom: 12px;
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .recommendations-grid { grid-template-columns: 1fr; }
+            .filter-bar { flex-wrap: wrap; }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb { background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border: 1px solid #e0d8f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+        .breadcrumb-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .breadcrumb-entity-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .breadcrumb-entity-type { background: #e9e5ff; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>💡 Personalized Recommendations</h1>
+    <p class="subtitle">AI-powered suggestions to optimize your portfolio and financial goals</p>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+    <div class="summary-info" id="summaryInfo">
+        <h2>Based on Your Profile</h2>
+        <p id="profileText">Complete your risk assessment to get personalized recommendations</p>
+    </div>
+
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterRecommendations('all')">All Recommendations</button>
+        <button class="filter-btn" onclick="filterRecommendations('portfolio')">Portfolio</button>
+        <button class="filter-btn" onclick="filterRecommendations('goal')">Goals</button>
+        <button class="filter-btn" onclick="filterRecommendations('tax')">Tax Optimization</button>
+        <button class="filter-btn" onclick="filterRecommendations('rebalance')">Rebalancing</button>
+    </div>
+
+    <div class="recommendations-grid" id="recommendationsGrid">
+        <!-- Recommendations will be loaded here -->
+    </div>
+</div>
+
+<script>
+    const allRecommendations = [
+        {
+            category: 'portfolio',
+            icon: '📈',
+            title: 'Diversify Your Equity Holdings',
+            priority: 'high',
+            description: 'Your equity portfolio is concentrated in large-cap funds. Consider adding mid-cap and small-cap exposure for better diversification.',
+            benefit: 'Potential higher returns with controlled risk through sector diversification',
+            action: 'Review allocation and add small/mid-cap funds'
+        },
+        {
+            category: 'rebalance',
+            icon: '⚖️',
+            title: 'Quarterly Portfolio Rebalancing',
+            priority: 'medium',
+            description: 'Your portfolio allocation has drifted from targets. Rebalancing can help maintain your desired risk level.',
+            benefit: 'Locks in gains from outperforming assets and buys underperformers',
+            action: 'Rebalance now'
+        },
+        {
+            category: 'tax',
+            icon: '🎯',
+            title: 'Tax-Loss Harvesting Opportunity',
+            priority: 'high',
+            description: 'You have unrealized losses in specific funds that can offset capital gains and reduce tax liability.',
+            benefit: 'Potential tax savings of ₹50,000-₹100,000 annually',
+            action: 'Review tax-loss harvesting'
+        },
+        {
+            category: 'goal',
+            icon: '🎓',
+            title: 'Increase Education Goal Contribution',
+            priority: 'medium',
+            description: 'Based on current inflation rates, your education goal needs ₹5L additional funds over 5 years.',
+            benefit: 'Ensures your child education goal is fully funded',
+            action: 'Adjust monthly contribution'
+        },
+        {
+            category: 'tax',
+            icon: '📋',
+            title: 'Maximize Section 80C Benefits',
+            priority: 'high',
+            description: 'You haven\'t fully utilized your ₹1.5L Section 80C deduction limit. Invest in ELSS or PPF.',
+            benefit: 'Tax savings of ₹46,500 (at 31% marginal rate)',
+            action: 'Invest in ELSS'
+        },
+        {
+            category: 'portfolio',
+            icon: '🏦',
+            title: 'Add Fixed Income Ladder Strategy',
+            priority: 'medium',
+            description: 'Create a debt fund ladder with varying maturity dates for better liquidity and returns.',
+            benefit: 'Improved liquidity and predictable returns',
+            action: 'Set up ladder'
+        },
+        {
+            category: 'goal',
+            icon: '🏠',
+            title: 'Home Purchase Goal Acceleration',
+            priority: 'low',
+            description: 'Increase monthly investment by ₹10,000 to purchase home 1 year earlier.',
+            benefit: 'Achieve home ownership goal sooner',
+            action: 'Increase contribution'
+        },
+        {
+            category: 'rebalance',
+            icon: '⚠️',
+            title: 'Reduce International Exposure',
+            priority: 'low',
+            description: 'Your international fund allocation exceeds recommended 10% limit at 15%.',
+            benefit: 'Better alignment with risk profile',
+            action: 'Rebalance allocation'
+        },
+        {
+            category: 'tax',
+            icon: '💰',
+            title: 'Section 80D Health Insurance Deduction',
+            priority: 'medium',
+            description: 'Claim health insurance premium deductions up to ₹25,000 for yourself and ₹25,000 for parents.',
+            benefit: 'Tax savings of ₹15,500 (at 31% rate)',
+            action: 'Claim deduction'
+        },
+        {
+            category: 'portfolio',
+            icon: '🔄',
+            title: 'Automate SIP Increase Strategy',
+            priority: 'low',
+            description: 'Set annual SIP increases (5-10%) to benefit from rupee-cost averaging and wage growth.',
+            benefit: 'Faster wealth accumulation with inflation adjustment',
+            action: 'Set up auto-increase'
+        }
+    ];
+
+    let activeFilter = 'all';
+
+    function generateRecommendations() {
+        const riskProfile = localStorage.getItem('fincentRiskProfile');
+        let profileText = 'Complete your risk assessment to get personalized recommendations';
+
+        if (riskProfile) {
+            const data = JSON.parse(riskProfile);
+            profileText = `Showing recommendations for your ${data.profile} risk profile. Update: Risk Score: ${data.score}/7`;
+            document.getElementById('profileText').textContent = profileText;
+        }
+
+        renderRecommendations();
+    }
+
+    function filterRecommendations(category) {
+        activeFilter = category;
+
+        // Update active button
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        renderRecommendations();
+    }
+
+    function renderRecommendations() {
+        const grid = document.getElementById('recommendationsGrid');
+        grid.innerHTML = '';
+
+        const filtered = activeFilter === 'all' 
+            ? allRecommendations 
+            : allRecommendations.filter(r => r.category === activeFilter);
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="empty-state">No recommendations found for this category</div>';
+            return;
+        }
+
+        filtered.forEach((rec, index) => {
+            const priorityClass = `priority-${rec.priority}`;
+            const card = document.createElement('div');
+            card.className = 'rec-card';
+            card.innerHTML = `
+                <div class="rec-icon">${rec.icon}</div>
+                <div class="rec-priority ${priorityClass}">${rec.priority} Priority</div>
+                <div class="rec-title">${rec.title}</div>
+                <div class="rec-description">${rec.description}</div>
+                <div class="rec-benefit"><strong>💡 Benefit:</strong> ${rec.benefit}</div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="implementRecommendation('${rec.title}')">Implement</button>
+                    <button class="btn btn-secondary" onclick="snoozeRecommendation(${index})">Snooze</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function implementRecommendation(title) {
+        alert(`Implementing: ${title}\n\nThis feature will navigate to the relevant module to implement this recommendation.`);
+    }
+
+    function updateBreadcrumb() {
+        const selectedEntityId = localStorage.getItem('selectedEntity');
+        const breadcrumb = document.getElementById('entityBreadcrumb');
+        
+        if (selectedEntityId && breadcrumb) {
+            const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+            const selectedEntity = entities.find(e => e.id === selectedEntityId);
+            
+            if (selectedEntity) {
+                const entityNameEl = document.getElementById('breadcrumbEntityName');
+                const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                
+                if (entityNameEl && entityTypeEl) {
+                    entityNameEl.textContent = selectedEntity.name;
+                    entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                    breadcrumb.style.display = 'flex';
+                }
+            }
+        }
+    }
+
+    function snoozeRecommendation(index) {
+        alert('Recommendation snoozed for 30 days');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBreadcrumb();
+        generateRecommendations();
+    });
+</script>
+
+</body>
+</html>

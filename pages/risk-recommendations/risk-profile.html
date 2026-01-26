@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Risk Profile | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .questionnaire {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .question-item {
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .question-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .question-text {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--secondary);
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+
+        .radio-option input[type="radio"] {
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"]:checked ~ label {
+            color: var(--primary);
+        }
+
+        .radio-option label {
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .option-title {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .option-desc {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
+        .result-section {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .profile-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .profile-conservative {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+        }
+
+        .profile-moderate {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+        }
+
+        .profile-aggressive {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+
+        .allocation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .allocation-item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .allocation-label {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .allocation-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .questionnaire { padding: 20px; }
+            .allocation-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb { background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border: 1px solid #e0d8f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+        .breadcrumb-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .breadcrumb-entity-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .breadcrumb-entity-type { background: #e9e5ff; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎲 Risk Profile Assessment</h1>
+    <p class="subtitle">Answer questions to determine your investment risk tolerance and get personalized allocation recommendations</p>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+    <div class="questionnaire" id="questionnaire">
+        <form onsubmit="handleSubmit(event)">
+            <div class="question-item">
+                <div class="question-text">1. What is your primary investment goal?</div>
+                <div class="options-grid">
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="3" required>
+                        <label><span class="option-title">Preserve capital</span><span class="option-desc">I want to protect my money and minimize risk</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="5">
+                        <label><span class="option-title">Balanced growth</span><span class="option-desc">I want moderate growth with some downside protection</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q1" value="7">
+                        <label><span class="option-title">Long-term wealth</span><span class="option-desc">I want maximum growth over time</span></label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <div class="question-text">2. How comfortable are you with market fluctuations?</div>
+                <div class="options-grid">
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="3" required>
+                        <label><span class="option-title">Very uncomfortable</span><span class="option-desc">Market swings make me anxious</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="5">
+                        <label><span class="option-title">Somewhat comfortable</span><span class="option-desc">I can handle moderate swings</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q2" value="7">
+                        <label><span class="option-title">Very comfortable</span><span class="option-desc">Market swings don't bother me</span></label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <div class="question-text">3. What is your investment time horizon?</div>
+                <div class="options-grid">
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="3" required>
+                        <label><span class="option-title">Less than 3 years</span><span class="option-desc">I need the money soon</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="5">
+                        <label><span class="option-title">3-10 years</span><span class="option-desc">Medium-term investment horizon</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q3" value="7">
+                        <label><span class="option-title">More than 10 years</span><span class="option-desc">Long-term investment horizon</span></label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <div class="question-text">4. How would you respond to a 20% market decline?</div>
+                <div class="options-grid">
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="2" required>
+                        <label><span class="option-title">Panic and sell</span><span class="option-desc">I would exit immediately</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="5">
+                        <label><span class="option-title">Hold and review</span><span class="option-desc">I would assess the situation</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q4" value="8">
+                        <label><span class="option-title">Buy more</span><span class="option-desc">I see it as an opportunity</span></label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-item">
+                <div class="question-text">5. What percentage of your portfolio are you willing to invest in high-risk assets?</div>
+                <div class="options-grid">
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="3" required>
+                        <label><span class="option-title">0-20%</span><span class="option-desc">I prefer low-risk investments</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="5">
+                        <label><span class="option-title">20-50%</span><span class="option-desc">Moderate high-risk exposure</span></label>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="q5" value="7">
+                        <label><span class="option-title">50%+</span><span class="option-desc">I'm comfortable with significant risk</span></label>
+                    </label>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">Calculate Risk Profile</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="result-section" id="resultSection">
+        <h2 style="margin-bottom:20px">Your Risk Profile Results</h2>
+        
+        <div id="profileBadge"></div>
+
+        <div style="background:#f1f5f9;padding:16px;border-radius:8px;margin-bottom:24px">
+            <p id="profileDescription" style="line-height:1.6"></p>
+        </div>
+
+        <h3 style="margin-top:24px;margin-bottom:16px">Recommended Asset Allocation</h3>
+        <div class="allocation-grid" id="allocationGrid"></div>
+
+        <div style="margin-top:32px">
+            <button class="btn btn-secondary" onclick="resetQuestionnaire()">Retake Assessment</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleSubmit(event) {
+        event.preventDefault();
+
+        const q1 = parseInt(document.querySelector('input[name="q1"]:checked').value);
+        const q2 = parseInt(document.querySelector('input[name="q2"]:checked').value);
+        const q3 = parseInt(document.querySelector('input[name="q3"]:checked').value);
+        const q4 = parseInt(document.querySelector('input[name="q4"]:checked').value);
+        const q5 = parseInt(document.querySelector('input[name="q5"]:checked').value);
+
+        const score = (q1 + q2 + q3 + q4 + q5) / 5;
+
+        let profile, profileClass, description, allocation;
+
+        if (score < 4) {
+            profile = 'Conservative';
+            profileClass = 'profile-conservative';
+            description = 'Your risk profile suggests a conservative approach. You prioritize capital preservation and stable returns over aggressive growth. You may be uncomfortable with significant market volatility.';
+            allocation = { 'Debt Funds': '60%', 'Equity Funds': '20%', 'Fixed Income': '15%', 'Gold/Safe': '5%' };
+        } else if (score < 5.5) {
+            profile = 'Moderate';
+            profileClass = 'profile-moderate';
+            description = 'Your risk profile suggests a moderate approach. You seek a balance between growth and stability. You can tolerate moderate market fluctuations while building wealth over time.';
+            allocation = { 'Equity Funds': '50%', 'Debt Funds': '30%', 'Balanced Funds': '15%', 'Alternatives': '5%' };
+        } else {
+            profile = 'Aggressive';
+            profileClass = 'profile-aggressive';
+            description = 'Your risk profile suggests an aggressive approach. You seek maximum growth and can tolerate significant market volatility. You have a long investment horizon and strong conviction about equity markets.';
+            allocation = { 'Equity Funds': '70%', 'Balanced Funds': '15%', 'Emerging/Small Cap': '10%', 'Debt': '5%' };
+        }
+
+        // Save to localStorage
+        localStorage.setItem('fincentRiskProfile', JSON.stringify({ profile, score: score.toFixed(2), answers: { q1, q2, q3, q4, q5 }, timestamp: new Date().toISOString() }));
+
+        // Display results
+        document.getElementById('questionnaire').style.display = 'none';
+        document.getElementById('resultSection').classList.add('active');
+
+        document.getElementById('profileBadge').innerHTML = `<div class="profile-badge ${profileClass}">${profile} Investor</div>`;
+        document.getElementById('profileDescription').textContent = description;
+
+        const allocationGrid = document.getElementById('allocationGrid');
+        allocationGrid.innerHTML = '';
+        Object.entries(allocation).forEach(([label, value]) => {
+            const item = document.createElement('div');
+            item.className = 'allocation-item';
+            item.innerHTML = `<div class="allocation-label">${label}</div><div class="allocation-value">${value}</div>`;
+            allocationGrid.appendChild(item);
+        });
+    }
+
+    function updateBreadcrumb() {
+        const selectedEntityId = localStorage.getItem('selectedEntity');
+        const breadcrumb = document.getElementById('entityBreadcrumb');
+        
+        if (selectedEntityId && breadcrumb) {
+            const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+            const selectedEntity = entities.find(e => e.id === selectedEntityId);
+            
+            if (selectedEntity) {
+                const entityNameEl = document.getElementById('breadcrumbEntityName');
+                const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                
+                if (entityNameEl && entityTypeEl) {
+                    entityNameEl.textContent = selectedEntity.name;
+                    entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                    breadcrumb.style.display = 'flex';
+                }
+            }
+        }
+    }
+
+    function resetQuestionnaire() {
+        document.getElementById('questionnaire').style.display = 'block';
+        document.getElementById('resultSection').classList.remove('active');
+        document.querySelector('form').reset();
+    }
+
+    // Load saved profile on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBreadcrumb();
+        const savedProfile = localStorage.getItem('fincentRiskProfile');
+        if (savedProfile) {
+            const data = JSON.parse(savedProfile);
+            console.log('Saved risk profile:', data);
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tax Calculation - Current FY | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            /* Revised purple color scheme from index.html */
+            --brand-purple-1: #5b3bd6; /* deep */
+            --brand-purple-2: #7b5cf2; /* mid */
+            --brand-purple-3: #8b6ff8; /* light */
+            --accent-green: #1fc08b;
+
+            /* Semantic aliases */
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+            --font-scale: 0.95;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: calc(28px * var(--font-scale));
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .fy-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .fy-selector label {
+            font-weight: 600;
+            color: var(--secondary);
+            white-space: nowrap;
+        }
+
+        .fy-selector select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 180px;
+            background: white;
+            color: var(--secondary);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-card h4 {
+            font-size: calc(12px * var(--font-scale));
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: calc(20px * var(--font-scale));
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            font-size: calc(14px * var(--font-scale));
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -15px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: calc(18px * var(--font-scale));
+        }
+
+        .tax-bracket {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .tax-bracket-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: calc(14px * var(--font-scale));
+        }
+
+        .tax-bracket-label {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .tax-bracket-value {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .tax-bracket-item.highlight {
+            border-top: 2px solid #dbeafe;
+            padding-top: 15px;
+            margin-top: 15px;
+            font-size: larger;
+        }
+
+        .progress-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .form-group input {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: calc(14px * var(--font-scale));
+            font-family: inherit;
+        }
+
+        .tax-status-box {
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--success);
+            margin-bottom: 20px;
+        }
+
+        .tax-status-box.warning {
+            background: #fef3c7;
+            border-left-color: var(--warning);
+        }
+
+        .tax-status-box.danger {
+            background: #fee2e2;
+            border-left-color: var(--danger);
+        }
+
+        .status-title {
+            font-weight: 700;
+            font-size: calc(15px * var(--font-scale));
+            margin-bottom: 8px;
+        }
+
+        .status-message {
+            font-size: calc(13px * var(--font-scale));
+            line-height: 1.6;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .table th {
+            background: #f1f5f9;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 1024px) {
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb { background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border: 1px solid #e0d8f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+        .breadcrumb-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .breadcrumb-entity-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .breadcrumb-entity-type { background: #e9e5ff; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+    <div class="page-header">
+        <h1>Tax Calculation - Current Financial Year Progress</h1>
+    </div>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+    <div class="fy-selector">
+        <label for="fyDropdown">Financial Year:</label>
+        <select id="fyDropdown" onchange="onFYChange()">
+            <option value="">-- Select Financial Year --</option>
+            <option value="2025-26" selected>2025-26</option>
+            <option value="2024-25">2024-25</option>
+            <option value="2023-24">2023-24</option>
+        </select>
+    </div>
+
+    <div class="summary-stats" id="summaryStats"></div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('actual-income')">Actual Income</button>
+        <button class="tab-btn" onclick="switchTab('tax-paid')">Tax Paid Progress</button>
+        <button class="tab-btn" onclick="switchTab('tax-analysis')">Tax Analysis</button>
+        <button class="tab-btn" onclick="switchTab('fy-summary')">FY Summary</button>
+    </div>
+
+    <!-- Actual Income Tab -->
+    <div class="tab-content active" id="actual-income">
+        <div class="card">
+            <h3>📊 Actual Income Received (To Date)</h3>
+            <p style="color: #64748b; margin-bottom: 20px;">Enter your actual income received till date in the current financial year.</p>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="actualSalary">Salary Received (₹)</label>
+                    <input type="number" id="actualSalary" placeholder="Enter actual salary" min="0" step="100" onchange="updateProgress()" />
+                </div>
+                <div class="form-group">
+                    <label for="salaryProjection">Full Year Salary Projection (₹)</label>
+                    <input type="number" id="salaryProjection" placeholder="Annual salary" min="0" step="100" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="actualRental">Rental Income Received (₹)</label>
+                    <input type="number" id="actualRental" placeholder="Enter actual rental" min="0" step="100" onchange="updateProgress()" />
+                </div>
+                <div class="form-group">
+                    <label for="actualInterest">Interest Income Received (₹)</label>
+                    <input type="number" id="actualInterest" placeholder="Enter actual interest" min="0" step="100" onchange="updateProgress()" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="actualDividend">Dividend Received (₹)</label>
+                    <input type="number" id="actualDividend" placeholder="Enter actual dividend" min="0" step="100" onchange="updateProgress()" />
+                </div>
+                <div class="form-group">
+                    <label for="actualCapitalGains">Capital Gains Realized (₹)</label>
+                    <input type="number" id="actualCapitalGains" placeholder="Enter actual gains" min="0" step="100" onchange="updateProgress()" />
+                </div>
+            </div>
+
+            <button class="btn" onclick="saveActualIncome()">💾 Save Actual Income</button>
+        </div>
+    </div>
+
+    <!-- Tax Paid Progress Tab -->
+    <div class="tab-content" id="tax-paid">
+        <div class="card">
+            <h3>💰 Tax Paid Progress</h3>
+            <p style="color: #64748b; margin-bottom: 20px;">Track advance tax payments and tax deducted at source (TDS) for the current financial year.</p>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h4 style="color: var(--secondary); margin-bottom: 15px;">Advance Tax Payments</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Installment</th>
+                            <th>Due Date</th>
+                            <th>Amount Planned (₹)</th>
+                            <th>Amount Paid (₹)</th>
+                            <th>Payment Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st Installment</td>
+                            <td>15 Jun</td>
+                            <td><input type="number" id="q1Planned" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="number" id="q1Paid" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="date" id="q1Date" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" /></td>
+                            <td id="q1Status">-</td>
+                        </tr>
+                        <tr>
+                            <td>2nd Installment</td>
+                            <td>15 Sep</td>
+                            <td><input type="number" id="q2Planned" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="number" id="q2Paid" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="date" id="q2Date" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" /></td>
+                            <td id="q2Status">-</td>
+                        </tr>
+                        <tr>
+                            <td>3rd Installment</td>
+                            <td>15 Dec</td>
+                            <td><input type="number" id="q3Planned" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="number" id="q3Paid" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="date" id="q3Date" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" /></td>
+                            <td id="q3Status">-</td>
+                        </tr>
+                        <tr>
+                            <td>4th Installment</td>
+                            <td>15 Mar</td>
+                            <td><input type="number" id="q4Planned" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="number" id="q4Paid" placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" onchange="updateProgress()" /></td>
+                            <td><input type="date" id="q4Date" style="width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;" /></td>
+                            <td id="q4Status">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h4 style="color: var(--secondary); margin-bottom: 15px;">Tax Deducted at Source (TDS)</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tdsSalary">TDS from Salary (₹)</label>
+                        <input type="number" id="tdsSalary" placeholder="Auto-populated from salary" min="0" step="100" onchange="updateProgress()" />
+                    </div>
+                    <div class="form-group">
+                        <label for="tdsOtherSources">TDS from Other Sources (₹)</label>
+                        <input type="number" id="tdsOtherSources" placeholder="Interest, Rental, etc." min="0" step="100" onchange="updateProgress()" />
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="saveTaxPaid()">💾 Save Tax Paid Details</button>
+        </div>
+    </div>
+
+    <!-- Tax Analysis Tab -->
+    <div class="tab-content" id="tax-analysis">
+        <div class="card" id="taxAnalysisCard">
+            <h3>📈 Tax Analysis & Projection</h3>
+            <div id="taxAnalysisContent" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- FY Summary Tab -->
+    <div class="tab-content" id="fy-summary">
+        <div class="card">
+            <h3>📋 Financial Year Summary (At Year End)</h3>
+            <p style="color: #64748b; margin-bottom: 20px;">This summary will be auto-populated at the end of the financial year with complete tax details.</p>
+
+            <div id="fySummaryContent" style="margin-top: 20px;"></div>
+
+            <button class="btn" onclick="generateFYSummary()" style="margin-top: 20px;">📊 Generate FY Summary</button>
+        </div>
+    </div>
+
+    <script>
+        let currentFY = '2025-26';
+
+        function onFYChange() {
+            currentFY = document.getElementById('fyDropdown').value;
+            loadTaxData();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'tax-analysis') {
+                updateTaxAnalysis();
+            }
+        }
+
+        function updateProgress() {
+            const actualSalary = parseFloat(document.getElementById('actualSalary').value) || 0;
+            const actualRental = parseFloat(document.getElementById('actualRental').value) || 0;
+            const actualInterest = parseFloat(document.getElementById('actualInterest').value) || 0;
+            const actualDividend = parseFloat(document.getElementById('actualDividend').value) || 0;
+            const actualCapitalGains = parseFloat(document.getElementById('actualCapitalGains').value) || 0;
+
+            const advanceTaxPaid = (parseFloat(document.getElementById('q1Paid').value) || 0) +
+                                   (parseFloat(document.getElementById('q2Paid').value) || 0) +
+                                   (parseFloat(document.getElementById('q3Paid').value) || 0) +
+                                   (parseFloat(document.getElementById('q4Paid').value) || 0);
+
+            const tdsSalary = parseFloat(document.getElementById('tdsSalary').value) || 0;
+            const tdsOthers = parseFloat(document.getElementById('tdsOtherSources').value) || 0;
+
+            const totalIncome = actualSalary + actualRental + actualInterest + actualDividend + actualCapitalGains;
+            const totalTaxPaid = advanceTaxPaid + tdsSalary + tdsOthers;
+
+            updateSummaryStats(totalIncome, advanceTaxPaid, totalTaxPaid);
+            updateTaxAnalysis();
+        }
+
+        function updateSummaryStats(totalIncome, advanceTaxPaid, totalTaxPaid) {
+            const progressPercentage = totalIncome > 0 ? ((totalIncome / 5800000) * 100).toFixed(1) : 0;
+            
+            document.getElementById('summaryStats').innerHTML = `
+                <div class="stat-card">
+                    <h4>Actual Income (To Date)</h4>
+                    <div class="value">₹ ${totalIncome.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Advance Tax Paid</h4>
+                    <div class="value">₹ ${advanceTaxPaid.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Tax Paid</h4>
+                    <div class="value">₹ ${totalTaxPaid.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Income Progress</h4>
+                    <div class="value">${progressPercentage}%</div>
+                </div>
+            `;
+        }
+
+        function updateTaxAnalysis() {
+            const actualIncome = (parseFloat(document.getElementById('actualSalary').value) || 0) +
+                                (parseFloat(document.getElementById('actualRental').value) || 0) +
+                                (parseFloat(document.getElementById('actualInterest').value) || 0) +
+                                (parseFloat(document.getElementById('actualDividend').value) || 0) +
+                                (parseFloat(document.getElementById('actualCapitalGains').value) || 0);
+
+            const advanceTaxPaid = (parseFloat(document.getElementById('q1Paid').value) || 0) +
+                                   (parseFloat(document.getElementById('q2Paid').value) || 0) +
+                                   (parseFloat(document.getElementById('q3Paid').value) || 0) +
+                                   (parseFloat(document.getElementById('q4Paid').value) || 0);
+
+            const tdsSalary = parseFloat(document.getElementById('tdsSalary').value) || 0;
+            const tdsOthers = parseFloat(document.getElementById('tdsOtherSources').value) || 0;
+            const totalTaxPaid = advanceTaxPaid + tdsSalary + tdsOthers;
+
+            // Estimate tax on actual income
+            const deductionsEstimate = 500000; // Estimated deductions
+            const taxableIncome = Math.max(0, actualIncome - deductionsEstimate);
+            let estimatedTax = 0;
+
+            if (taxableIncome > 300000 && taxableIncome <= 700000) {
+                estimatedTax = (taxableIncome - 300000) * 0.05;
+            } else if (taxableIncome > 700000) {
+                estimatedTax = 20000 + (taxableIncome - 700000) * 0.20;
+            }
+            estimatedTax = estimatedTax * 1.04; // Add 4% cess
+
+            const balanceTax = Math.max(0, estimatedTax - totalTaxPaid);
+
+            const progressPercentage = (totalTaxPaid / estimatedTax * 100).toFixed(1);
+
+            let statusHtml = '';
+            if (balanceTax > 0) {
+                statusHtml = `<div class="tax-status-box warning">
+                    <div class="status-title">⚠️ Balance Tax Due</div>
+                    <div class="status-message">You may need to pay ₹ ${Math.round(balanceTax).toLocaleString('en-IN')} more at the time of filing.</div>
+                </div>`;
+            } else if (balanceTax < 0) {
+                statusHtml = `<div class="tax-status-box">
+                    <div class="status-title">✓ Likely Refund</div>
+                    <div class="status-message">You may be eligible for a refund of ₹ ${Math.round(-balanceTax).toLocaleString('en-IN')} after filing.</div>
+                </div>`;
+            }
+
+            document.getElementById('taxAnalysisContent').innerHTML = `
+                ${statusHtml}
+                <div class="tax-bracket">
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Actual Income Till Date:</span>
+                        <span class="tax-bracket-value">₹ ${actualIncome.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Estimated Taxable Income:</span>
+                        <span class="tax-bracket-value">₹ ${taxableIncome.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="tax-bracket-item highlight">
+                        <span class="tax-bracket-label">Estimated Total Tax:</span>
+                        <span class="tax-bracket-value">₹ ${Math.round(estimatedTax).toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
+
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>Tax Payment Progress</span>
+                        <span>${progressPercentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(progressPercentage, 100)}%"></div>
+                    </div>
+                </div>
+
+                <div class="tax-bracket" style="background: #f0fdf4; border-left-color: var(--success);">
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Advance Tax Paid:</span>
+                        <span class="tax-bracket-value" style="color: var(--success);">₹ ${advanceTaxPaid.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">TDS Deducted:</span>
+                        <span class="tax-bracket-value" style="color: var(--success);">₹ ${(tdsSalary + tdsOthers).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="tax-bracket-item highlight">
+                        <span class="tax-bracket-label">Total Tax Paid:</span>
+                        <span class="tax-bracket-value" style="color: var(--success);">₹ ${totalTaxPaid.toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateFYSummary() {
+            const actualIncome = (parseFloat(document.getElementById('actualSalary').value) || 0) +
+                                (parseFloat(document.getElementById('actualRental').value) || 0) +
+                                (parseFloat(document.getElementById('actualInterest').value) || 0) +
+                                (parseFloat(document.getElementById('actualDividend').value) || 0) +
+                                (parseFloat(document.getElementById('actualCapitalGains').value) || 0);
+
+            const totalTaxPaid = (parseFloat(document.getElementById('q1Paid').value) || 0) +
+                                (parseFloat(document.getElementById('q2Paid').value) || 0) +
+                                (parseFloat(document.getElementById('q3Paid').value) || 0) +
+                                (parseFloat(document.getElementById('q4Paid').value) || 0) +
+                                (parseFloat(document.getElementById('tdsSalary').value) || 0) +
+                                (parseFloat(document.getElementById('tdsOtherSources').value) || 0);
+
+            const content = `
+                <div class="tax-bracket">
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Total Gross Income (FY):</span>
+                        <span class="tax-bracket-value">₹ ${actualIncome.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Total Deductions (Est.):</span>
+                        <span class="tax-bracket-value">₹ 500,000</span>
+                    </div>
+                    <div class="tax-bracket-item highlight">
+                        <span class="tax-bracket-label">Taxable Income:</span>
+                        <span class="tax-bracket-value">₹ ${Math.max(0, actualIncome - 500000).toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
+
+                <div class="tax-bracket" style="background: #f0fdf4; border-left-color: var(--success);">
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Total Tax Paid:</span>
+                        <span class="tax-bracket-value" style="color: var(--success);">₹ ${totalTaxPaid.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div class="tax-bracket-item">
+                        <span class="tax-bracket-label">Tax Liability (Est.):</span>
+                        <span class="tax-bracket-value" style="color: var(--success);">₹ 850,000</span>
+                    </div>
+                    <div class="tax-bracket-item highlight">
+                        <span class="tax-bracket-label">Balance/Refund:</span>
+                        <span class="tax-bracket-value" style="color: var(--success);">₹ ${(totalTaxPaid - 850000).toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('fySummaryContent').innerHTML = content;
+            alert('FY Summary generated!');
+        }
+
+        function saveActualIncome() {
+            const data = {
+                salary: document.getElementById('actualSalary').value,
+                rental: document.getElementById('actualRental').value,
+                interest: document.getElementById('actualInterest').value,
+                dividend: document.getElementById('actualDividend').value,
+                capitalGains: document.getElementById('actualCapitalGains').value
+            };
+            localStorage.setItem('taxCalculationIncome_' + currentFY, JSON.stringify(data));
+            alert('Actual income saved for ' + currentFY);
+        }
+
+        function saveTaxPaid() {
+            const data = {
+                q1Planned: document.getElementById('q1Planned').value,
+                q1Paid: document.getElementById('q1Paid').value,
+                q2Planned: document.getElementById('q2Planned').value,
+                q2Paid: document.getElementById('q2Paid').value,
+                q3Planned: document.getElementById('q3Planned').value,
+                q3Paid: document.getElementById('q3Paid').value,
+                q4Planned: document.getElementById('q4Planned').value,
+                q4Paid: document.getElementById('q4Paid').value,
+                tdsSalary: document.getElementById('tdsSalary').value,
+                tdsOthers: document.getElementById('tdsOtherSources').value
+            };
+            localStorage.setItem('taxCalculationPaid_' + currentFY, JSON.stringify(data));
+            alert('Tax paid details saved for ' + currentFY);
+        }
+
+        function updateBreadcrumb() {
+            const selectedEntityId = localStorage.getItem('selectedEntity');
+            const breadcrumb = document.getElementById('entityBreadcrumb');
+            
+            if (selectedEntityId && breadcrumb) {
+                const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+                const selectedEntity = entities.find(e => e.id === selectedEntityId);
+                
+                if (selectedEntity) {
+                    const entityNameEl = document.getElementById('breadcrumbEntityName');
+                    const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                    
+                    if (entityNameEl && entityTypeEl) {
+                        entityNameEl.textContent = selectedEntity.name;
+                        entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                        breadcrumb.style.display = 'flex';
+                    }
+                }
+            }
+        }
+
+        function loadTaxData() {
+            updateBreadcrumb();
+            const incomeData = JSON.parse(localStorage.getItem('taxCalculationIncome_' + currentFY) || '{}');
+            const paidData = JSON.parse(localStorage.getItem('taxCalculationPaid_' + currentFY) || '{}');
+
+            document.getElementById('actualSalary').value = incomeData.salary || '';
+            document.getElementById('actualRental').value = incomeData.rental || '';
+            document.getElementById('actualInterest').value = incomeData.interest || '';
+            document.getElementById('actualDividend').value = incomeData.dividend || '';
+            document.getElementById('actualCapitalGains').value = incomeData.capitalGains || '';
+
+            document.getElementById('q1Planned').value = paidData.q1Planned || '';
+            document.getElementById('q1Paid').value = paidData.q1Paid || '';
+            document.getElementById('q2Planned').value = paidData.q2Planned || '';
+            document.getElementById('q2Paid').value = paidData.q2Paid || '';
+            document.getElementById('q3Planned').value = paidData.q3Planned || '';
+            document.getElementById('q3Paid').value = paidData.q3Paid || '';
+            document.getElementById('q4Planned').value = paidData.q4Planned || '';
+            document.getElementById('q4Paid').value = paidData.q4Paid || '';
+            document.getElementById('tdsSalary').value = paidData.tdsSalary || '';
+            document.getElementById('tdsOtherSources').value = paidData.tdsOthers || '';
+
+            updateProgress();
+        }
+
+        window.addEventListener('load', function() {
+            const fontScale = localStorage.getItem('fontScale') || '0.95';
+            document.documentElement.style.setProperty('--font-scale', fontScale);
+            document.body.style.zoom = fontScale;
+            loadTaxData();
+        });
+    </script>
+</body>
+</html>

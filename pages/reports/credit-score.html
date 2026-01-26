@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credit Score | FinCent</title>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .credit-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(91,59,214,0.2);
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .score-number {
+            font-size: 72px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .score-range {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .score-rating {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .score-meter {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: var(--accent-green);
+            width: 72%;
+            transition: width 0.5s ease;
+        }
+
+        .score-footer {
+            font-size: 13px;
+            opacity: 0.85;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: var(--card);
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+
+        .summary-card h3 {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .factors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .factor-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .factor-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .factor-weight {
+            font-size: 12px;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #64748b;
+        }
+
+        .factor-description {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .meter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .meter-bar {
+            flex: 1;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        .meter-label {
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .recommendations {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .recommendations h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .recommendation-item {
+            padding: 16px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--secondary);
+        }
+
+        .recommendation-desc {
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .timeline {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .timeline h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-date {
+            font-weight: 600;
+            min-width: 100px;
+            color: var(--primary);
+        }
+
+        .timeline-event {
+            flex: 1;
+        }
+
+        .timeline-event-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-event-desc {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .credit-card { padding: 24px; }
+            .score-number { font-size: 48px; }
+            .factors-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>💳 Credit Score Tracker</h1>
+    <p class="subtitle">Monitor and improve your CIBIL credit score with personalized insights and recommendations</p>
+
+    <div class="credit-card">
+        <div class="score-display">
+            <div class="score-number" id="scoreNumber">745</div>
+            <div class="score-range">Out of 900</div>
+            <div class="score-rating">Good Score ✓</div>
+        </div>
+        <div class="score-meter">
+            <div class="score-fill" id="scoreFill"></div>
+        </div>
+        <div class="score-footer">Last updated: January 15, 2026 | Next update: February 15, 2026</div>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h3>Credit Utilization Ratio</h3>
+            <div class="value">25%</div>
+        </div>
+        <div class="summary-card">
+            <h3>Active Accounts</h3>
+            <div class="value">6</div>
+        </div>
+        <div class="summary-card">
+            <h3>Payment History</h3>
+            <div class="value">Perfect</div>
+        </div>
+        <div class="summary-card">
+            <h3>Years of Credit</h3>
+            <div class="value">8 Years</div>
+        </div>
+    </div>
+
+    <h2 style="margin: 30px 0 20px">Credit Score Components</h2>
+
+    <div class="factors-grid">
+        <div class="factor-card">
+            <div class="factor-title">
+                Payment History
+                <span class="factor-weight">35% Weight</span>
+            </div>
+            <div class="factor-description">On-time payment record across all credit accounts</div>
+            <div class="meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 95%"></div>
+                </div>
+                <div class="meter-label">95%</div>
+            </div>
+            <div style="font-size: 12px; color: var(--success)">✓ Excellent - Maintain this</div>
+        </div>
+
+        <div class="factor-card">
+            <div class="factor-title">
+                Credit Utilization
+                <span class="factor-weight">30% Weight</span>
+            </div>
+            <div class="factor-description">Ratio of used credit to available credit limit</div>
+            <div class="meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 60%"></div>
+                </div>
+                <div class="meter-label">60%</div>
+            </div>
+            <div style="font-size: 12px; color: var(--warning)">⚠ Good - Can improve</div>
+        </div>
+
+        <div class="factor-card">
+            <div class="factor-title">
+                Credit Mix
+                <span class="factor-weight">15% Weight</span>
+            </div>
+            <div class="factor-description">Diversity of credit types (secured, unsecured, credit cards)</div>
+            <div class="meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 80%"></div>
+                </div>
+                <div class="meter-label">80%</div>
+            </div>
+            <div style="font-size: 12px; color: var(--success)">✓ Good Mix</div>
+        </div>
+
+        <div class="factor-card">
+            <div class="factor-title">
+                Credit Age
+                <span class="factor-weight">10% Weight</span>
+            </div>
+            <div class="factor-description">Average age of your credit accounts</div>
+            <div class="meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 85%"></div>
+                </div>
+                <div class="meter-label">85%</div>
+            </div>
+            <div style="font-size: 12px; color: var(--success)">✓ Strong - 8 years average</div>
+        </div>
+
+        <div class="factor-card">
+            <div class="factor-title">
+                Credit Enquiries
+                <span class="factor-weight">10% Weight</span>
+            </div>
+            <div class="factor-description">Number of recent credit applications</div>
+            <div class="meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 70%"></div>
+                </div>
+                <div class="meter-label">70%</div>
+            </div>
+            <div style="font-size: 12px; color: var(--success)">✓ Low enquiries</div>
+        </div>
+
+        <div class="factor-card">
+            <div class="factor-title">
+                Negative Items
+                <span class="factor-weight">Variable</span>
+            </div>
+            <div class="factor-description">Late payments, defaults, or settlements</div>
+            <div class="meter">
+                <div class="meter-bar">
+                    <div class="meter-fill" style="width: 100%"></div>
+                </div>
+                <div class="meter-label">None</div>
+            </div>
+            <div style="font-size: 12px; color: var(--success)">✓ Clean record</div>
+        </div>
+    </div>
+
+    <div class="recommendations">
+        <h2>💡 Recommendations to Improve Your Score</h2>
+        
+        <div class="recommendation-item">
+            <div class="recommendation-title">🎯 Reduce Credit Utilization to Below 30%</div>
+            <div class="recommendation-desc">Currently at 25%, which is good. Aim for below 10% for optimal score. Pay down your credit card balance by ₹50,000 to reach 15% utilization.</div>
+        </div>
+
+        <div class="recommendation-item">
+            <div class="recommendation-title">📅 Maintain Perfect Payment History</div>
+            <div class="recommendation-desc">Your 95% on-time payment rate is excellent. Set up auto-pay for all credit cards and loans to maintain this streak.</div>
+        </div>
+
+        <div class="recommendation-item">
+            <div class="recommendation-title">🚫 Avoid New Credit Applications</div>
+            <div class="recommendation-desc">Each new application creates a hard enquiry that temporarily lowers your score. Avoid applying for new credit for the next 6 months.</div>
+        </div>
+
+        <div class="recommendation-item">
+            <div class="recommendation-title">💰 Consider a Secured Loan</div>
+            <div class="recommendation-desc">A small secured loan (backed by FDs) can improve your credit mix and demonstrate creditworthiness, potentially boosting your score by 20-30 points.</div>
+        </div>
+
+        <div class="recommendation-item">
+            <div class="recommendation-title">✅ Diversify Credit Portfolio</div>
+            <div class="recommendation-desc">Good credit mix (3 cards, 2 loans). Consider maintaining this diversity. Adding a home loan would further strengthen your profile.</div>
+        </div>
+    </div>
+
+    <div class="timeline">
+        <h2>📈 Your Credit Score Trend</h2>
+        
+        <div class="timeline-item">
+            <div class="timeline-date">Jan 2026</div>
+            <div class="timeline-event">
+                <div class="timeline-event-title">Current Score: 745 📈</div>
+                <div class="timeline-event-desc">Improved by 15 points due to reduced credit utilization</div>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">Dec 2025</div>
+            <div class="timeline-event">
+                <div class="timeline-event-title">Score: 730</div>
+                <div class="timeline-event-desc">Stable with perfect payment history</div>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">Nov 2025</div>
+            <div class="timeline-event">
+                <div class="timeline-event-title">Score: 728</div>
+                <div class="timeline-event-desc">Minor increase from utility bill payments reported</div>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">Oct 2025</div>
+            <div class="timeline-event">
+                <div class="timeline-event-title">Score: 720</div>
+                <div class="timeline-event-desc">Home loan repayment reflected positively</div>
+            </div>
+        </div>
+
+        <div class="timeline-item">
+            <div class="timeline-date">Sep 2025</div>
+            <div class="timeline-event">
+                <div class="timeline-event-title">Score: 715</div>
+                <div class="timeline-event-desc">New credit card reduced utilization ratio</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const score = 745;
+        const maxScore = 900;
+        const percentage = (score / maxScore) * 100;
+        
+        document.getElementById('scoreNumber').textContent = score;
+        document.getElementById('scoreFill').style.width = percentage + '%';
+    });
+</script>
+
+</body>
+</html>

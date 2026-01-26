@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entity & Family Management | FinCent</title>
+    <link rel="stylesheet" href="../../css/common.css">
+    <link rel="stylesheet" href="../../css/entity-management.css">
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="page-header">
+        <h1>💼 Entity & Family Management</h1>
+        <p class="subtitle">Manage entities with comprehensive family member mapping and relationships</p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('family')">Family Members</button>
+        <button class="tab-btn" onclick="switchTab('entities')">Entities</button>
+        <button class="tab-btn" onclick="switchTab('mappings')">Entity-Family Mappings</button>
+        <button class="tab-btn" onclick="switchTab('pan-status')">PAN Status</button>
+    </div>
+
+    <!-- FAMILY MEMBERS TAB -->
+    <div class="tab-content active" id="family">
+        <div class="summary-stats" id="familySummaryStats"></div>
+        <div class="btn-action-group">
+            <button class="btn btn-primary" onclick="openAddMemberModal()">+ Add Family Member</button>
+        </div>
+        <div id="membersContainer"></div>
+    </div>
+
+    <!-- ENTITIES TAB -->
+    <div class="tab-content" id="entities">
+        <div class="summary-stats" id="entitySummaryStats"></div>
+        <div class="btn-action-group">
+            <button class="btn btn-primary" onclick="openAddEntityModal()">+ Add New Entity</button>
+        </div>
+        <div class="entities-grid" id="entitiesGrid"></div>
+    </div>
+
+    <!-- ENTITY-FAMILY MAPPINGS TAB -->
+    <div class="tab-content" id="mappings">
+        <div class="btn-action-group">
+            <button class="btn btn-primary" onclick="openMappingModal()">+ New Mapping</button>
+        </div>
+        <div id="mappingsContainer"></div>
+    </div>
+
+    <!-- PAN STATUS TAB -->
+    <div class="tab-content" id="pan-status">
+        <h3 style="margin-bottom: 20px; color: var(--primary);">PAN Status Overview</h3>
+        <table class="table" id="panTable">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Details</th>
+                    <th>PAN</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="panTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ADD/EDIT ENTITY MODAL -->
+<div class="modal" id="entityModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="entityModalTitle">Add New Entity</h2>
+            <button class="modal-close" onclick="closeEntityModal()">&times;</button>
+        </div>
+        <form onsubmit="handleEntitySubmit(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="entityName">Entity Name *</label>
+                    <input type="text" id="entityName" placeholder="e.g., My Account, Spouse Account" required>
+                </div>
+                <div class="form-group">
+                    <label for="entityType">Entity Type *</label>
+                    <select id="entityType" required onchange="updateEntityTypeInfo()">
+                        <option value="">Select Type</option>
+                        <option value="individual">Individual</option>
+                        <option value="spouse">Spouse</option>
+                        <option value="family">Family (Combined)</option>
+                        <option value="huf">HUF (Hindu Undivided Family)</option>
+                        <option value="joint">Joint Account</option>
+                        <option value="business">Business</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="entityPan">PAN</label>
+                    <input type="text" id="entityPan" placeholder="e.g., ABCDE1234F" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label for="entityTaxRegime">Tax Regime</label>
+                    <select id="entityTaxRegime">
+                        <option value="new">New Tax Regime (Default)</option>
+                        <option value="old">Old Tax Regime</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Financial Properties</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="investments"> Investments
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="savings"> Savings
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="business"> Business
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" value="rental"> Rental Income
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Entity</button>
+                <button type="button" class="btn btn-secondary" onclick="closeEntityModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ADD/EDIT FAMILY MEMBER MODAL -->
+<div class="modal" id="memberModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="memberModalTitle">Add Family Member</h2>
+            <button class="modal-close" onclick="closeMemberModal()">&times;</button>
+        </div>
+        <form id="memberForm" onsubmit="handleMemberSubmit(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="memberName">Full Name *</label>
+                    <input type="text" id="memberName" placeholder="Enter full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="memberRelationship">Relationship *</label>
+                    <select id="memberRelationship" required>
+                        <option value="">-- Select --</option>
+                        <option value="Self">Self</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Son">Son</option>
+                        <option value="Daughter">Daughter</option>
+                        <option value="Father">Father</option>
+                        <option value="Mother">Mother</option>
+                        <option value="Brother">Brother</option>
+                        <option value="Sister">Sister</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="memberDOB">Date of Birth</label>
+                    <input type="date" id="memberDOB">
+                </div>
+                <div class="form-group">
+                    <label for="memberGender">Gender</label>
+                    <select id="memberGender">
+                        <option value="">-- Select --</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="memberPAN">PAN Number</label>
+                    <input type="text" id="memberPAN" placeholder="ABCDE1234F" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label for="memberAadhaar">Aadhaar Number</label>
+                    <input type="text" id="memberAadhaar" placeholder="12 digits" maxlength="12">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="memberIsHUF">
+                    <span>This member is HUF (Hindu Undivided Family)</span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="memberNotes">Notes</label>
+                <textarea id="memberNotes" placeholder="Add any additional notes"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Member</button>
+                <button type="button" class="btn btn-secondary" onclick="closeMemberModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MAP FAMILY MEMBERS TO ENTITY MODAL -->
+<div class="modal" id="mappingModal">
+    <div class="modal-content mapping-modal-content">
+        <div class="modal-header">
+            <h2 id="mappingModalTitle">Map Family Members to Entity</h2>
+            <button class="modal-close" onclick="closeMappingModal()">&times;</button>
+        </div>
+        <form onsubmit="handleMappingSubmit(event)">
+            <div class="form-group">
+                <label for="mappingEntity">Select Entity *</label>
+                <select id="mappingEntity" required>
+                    <option value="">-- Select Entity --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Family Members *</label>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Select members to associate with this entity (1 member can map to multiple entities)</p>
+                <div class="members-list-modal" id="membersList"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Mapping</button>
+                <button type="button" class="btn btn-secondary" onclick="closeMappingModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../../js/entity-management.js"></script>
+
+</body>
+</html>

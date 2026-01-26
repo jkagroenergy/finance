@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LTCG Optimizer | FinCent</title>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--card) 0%, #f8fafc 100%);
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+
+        .summary-card h3 {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .info-banner {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .info-banner strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .funds-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .funds-table thead {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .funds-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .funds-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        .funds-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-eligible {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-ineligible {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-mature {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .gain-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .gain-positive {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .gain-negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .recommendation-box {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .recommendation-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--secondary);
+        }
+
+        .rec-item {
+            padding: 12px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .rec-item strong {
+            display: block;
+            margin-bottom: 4px;
+            color: var(--primary);
+        }
+
+        .rec-item p {
+            font-size: 14px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .funds-table { font-size: 12px; }
+            .funds-table th, .funds-table td { padding: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎯 LTCG (Long-term Capital Gains) Optimizer</h1>
+    <p class="subtitle">Maximize tax-free gains and optimize your redemption strategy under Section 112A</p>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h3>Annual LTCG Limit (Tax-Free)</h3>
+            <div class="value">₹1,25,000</div>
+        </div>
+        <div class="summary-card">
+            <h3>Your LTCG Used This Year</h3>
+            <div class="value" id="ltcgUsed">₹45,000</div>
+        </div>
+        <div class="summary-card">
+            <h3>Available Limit</h3>
+            <div class="value" id="ltcgAvailable">₹80,000</div>
+        </div>
+        <div class="summary-card">
+            <h3>Eligible Funds Ready</h3>
+            <div class="value" id="eligibleFunds">4</div>
+        </div>
+    </div>
+
+    <div class="info-banner">
+        <strong>📌 Section 112A Benefit</strong>
+        Long-term capital gains up to ₹1,25,000 are exempt from tax if invested in specified mutual funds. Gains above this limit are taxed at 20%.
+    </div>
+
+    <div class="recommendation-box">
+        <div class="recommendation-title">💡 Recommended Redemption Strategy</div>
+        <div class="rec-item">
+            <strong>Step 1: Redeem HDFC Balanced Fund - ₹50,000 gain</strong>
+            <p>Held for 3.5 years. Gain of ₹50,000 is fully tax-free under Section 112A. Execute immediately.</p>
+        </div>
+        <div class="rec-item">
+            <strong>Step 2: Partial Redemption of SBI Bluechip Fund - ₹30,000 gain</strong>
+            <p>Redeem units with ₹30,000 gain to utilize remaining ₹80,000 limit this fiscal year.</p>
+        </div>
+        <div class="rec-item">
+            <strong>Step 3: Hold other funds till next fiscal year</strong>
+            <p>Defer remaining redemptions to next financial year to reset the ₹1,25,000 limit.</p>
+        </div>
+    </div>
+
+    <h2 style="margin-bottom: 20px">Eligible Funds for LTCG Redemption</h2>
+    
+    <table class="funds-table">
+        <thead>
+            <tr>
+                <th>Fund Name</th>
+                <th>Holding Period</th>
+                <th>Status</th>
+                <th>Current Value</th>
+                <th>Cost Basis</th>
+                <th>Gain</th>
+                <th>Tax Impact</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>HDFC Balanced Fund</strong></td>
+                <td>3 years 6 months</td>
+                <td><span class="status-badge status-eligible">LTCG Eligible</span></td>
+                <td>₹1,50,000</td>
+                <td>₹1,00,000</td>
+                <td><span class="gain-badge gain-positive">+₹50,000</span></td>
+                <td>Tax-Free ✓</td>
+                <td><button class="action-btn" onclick="redeemFund('hdfc')">Redeem</button></td>
+            </tr>
+            <tr>
+                <td><strong>SBI Bluechip Fund</strong></td>
+                <td>2 years 8 months</td>
+                <td><span class="status-badge status-eligible">LTCG Eligible</span></td>
+                <td>₹2,30,000</td>
+                <td>₹2,00,000</td>
+                <td><span class="gain-badge gain-positive">+₹30,000</span></td>
+                <td>Tax-Free ✓</td>
+                <td><button class="action-btn" onclick="redeemFund('sbi')">Redeem</button></td>
+            </tr>
+            <tr>
+                <td><strong>ICICI Liquid Fund</strong></td>
+                <td>1 year 2 months</td>
+                <td><span class="status-badge status-ineligible">STCG (Not Eligible)</span></td>
+                <td>₹1,05,000</td>
+                <td>₹1,00,000</td>
+                <td><span class="gain-badge gain-positive">+₹5,000</span></td>
+                <td>20% Tax ₹1,000</td>
+                <td><button class="action-btn" onclick="holdFund('icici')">Hold</button></td>
+            </tr>
+            <tr>
+                <td><strong>Axis Growth Fund</strong></td>
+                <td>3 years 1 month</td>
+                <td><span class="status-badge status-eligible">LTCG Eligible</span></td>
+                <td>₹3,50,000</td>
+                <td>₹2,50,000</td>
+                <td><span class="gain-badge gain-positive">+₹1,00,000</span></td>
+                <td>20% Tax ₹20,000</td>
+                <td><button class="action-btn" onclick="partialRedeem('axis')">Partial</button></td>
+            </tr>
+            <tr>
+                <td><strong>Motilal Oswal Fund</strong></td>
+                <td>11 months</td>
+                <td><span class="status-badge status-ineligible">Not Mature</span></td>
+                <td>₹95,000</td>
+                <td>₹90,000</td>
+                <td><span class="gain-badge gain-positive">+₹5,000</span></td>
+                <td>Slab Rate</td>
+                <td><button class="action-btn" onclick="holdFund('motilal')">Wait</button></td>
+            </tr>
+            <tr>
+                <td><strong>ICICI Value Fund</strong></td>
+                <td>2 years 11 months</td>
+                <td><span class="status-badge status-mature">Maturing Soon</span></td>
+                <td>₹75,000</td>
+                <td>₹65,000</td>
+                <td><span class="gain-badge gain-positive">+₹10,000</span></td>
+                <td>Tax-Free Soon ✓</td>
+                <td><button class="action-btn" onclick="planRedeem('value')">Plan</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="recommendation-box">
+        <div class="recommendation-title">📊 Tax Optimization Summary</div>
+        <div class="rec-item">
+            <strong>Available LTCG Exemption This Year: ₹80,000</strong>
+            <p>You have ₹80,000 of tax-free LTCG exemption remaining. Best strategy: Redeem HDFC (₹50K) + SBI (₹30K) = ₹80K exactly.</p>
+        </div>
+        <div class="rec-item">
+            <strong>Tax Savings Opportunity: ₹20,000</strong>
+            <p>By following the recommended strategy, you save ₹20,000 in taxes (25% of ₹80K gains if taxed at 25%).</p>
+        </div>
+        <div class="rec-item">
+            <strong>Next Fiscal Year Strategy</strong>
+            <p>Reset your ₹1,25,000 LTCG exemption from April 2026. Axis Fund (₹1L gain) will be fully eligible.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function redeemFund(fundName) {
+        alert(`Redeeming ${fundName} fund...`);
+    }
+
+    function partialRedeem(fundName) {
+        alert(`Partial redemption of ${fundName} fund...`);
+    }
+
+    function holdFund(fundName) {
+        alert(`Holding ${fundName} fund...`);
+    }
+
+    function planRedeem(fundName) {
+        alert(`Planning redemption for ${fundName} fund...`);
+    }
+
+    // Update available limit
+    document.addEventListener('DOMContentLoaded', function() {
+        const used = 45000;
+        const limit = 125000;
+        const available = limit - used;
+        
+        document.getElementById('ltcgUsed').textContent = '₹' + used.toLocaleString('en-IN');
+        document.getElementById('ltcgAvailable').textContent = '₹' + available.toLocaleString('en-IN');
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Details | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            /* Revised purple color scheme from index.html */
+            --brand-purple-1: #5b3bd6; /* deep */
+            --brand-purple-2: #7b5cf2; /* mid */
+            --brand-purple-3: #8b6ff8; /* light */
+            --accent-green: #1fc08b;
+
+            /* Semantic aliases */
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+            --font-scale: 0.95;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0 4px;
+        }
+
+        .expense-type-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .expense-type-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--secondary);
+        }
+
+        .expense-type-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .expense-type-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--warning);
+        }
+
+        .stat-card h4 {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--warning);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .category-box {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 25px;
+        }
+
+        .category-box h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .category-item {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .category-item:hover {
+            border-color: var(--primary);
+            background: #f0f9ff;
+        }
+
+        .category-item.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .table th {
+            background: #f1f5f9;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--secondary);
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 1200px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-body {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 25px;
+            margin-top: 15px;
+        }
+
+        .expense-categories-panel {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f8fafc;
+            max-height: calc(90vh - 200px);
+            overflow-y: auto;
+        }
+
+        .expense-categories-panel .category-box {
+            background: white;
+            margin-bottom: 12px;
+            padding: 0;
+            border: none;
+            border-radius: 6px;
+        }
+
+        .expense-categories-panel .category-box h3 {
+            background: #f0f9ff;
+            padding: 10px 12px;
+            margin: 0;
+            font-size: 13px;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .expense-categories-panel .category-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            margin: 0;
+        }
+
+        .expense-categories-panel .category-item {
+            padding: 8px 10px;
+            font-size: 12px;
+            text-align: left;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .expense-form-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: var(--primary);
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.monthly {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.quarterly {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.half-yearly {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.yearly {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .fy-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .fy-selector label {
+            font-weight: 600;
+            color: var(--secondary);
+            white-space: nowrap;
+        }
+
+        .fy-selector select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 180px;
+            background: white;
+            color: var(--secondary);
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .table {
+                font-size: 11px;
+            }
+
+            .table th, .table td {
+                padding: 8px;
+            }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%);
+            border: 1px solid #e0d8f5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .breadcrumb-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .breadcrumb-entity-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .breadcrumb-entity-type {
+            background: #e9e5ff;
+            color: #6d28d9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>Future Expense Planning</h1>
+        <button class="btn btn-primary" onclick="openAddExpenseModal()">+ Add Expense</button>
+    </div>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+    <div class="fy-selector">
+        <label for="fyDropdown">Financial Year:</label>
+        <select id="fyDropdown" onchange="onFYChange()">
+            <option value="">-- Select Financial Year --</option>
+            <option value="2025-26">2025-26</option>
+            <option value="2024-25">2024-25</option>
+            <option value="2023-24">2023-24</option>
+            <option value="2022-23">2022-23</option>
+        </select>
+    </div>
+
+    <div class="summary-stats" id="summaryStats"></div>
+
+    <!-- Expense Frequency Filters -->
+    <div class="expense-type-tabs">
+        <button class="expense-type-btn active" onclick="filterByFrequency('all')">All Expenses</button>
+        <button class="expense-type-btn" onclick="filterByFrequency('monthly')">Monthly</button>
+        <button class="expense-type-btn" onclick="filterByFrequency('quarterly')">Quarterly</button>
+        <button class="expense-type-btn" onclick="filterByFrequency('half-yearly')">Half-Yearly</button>
+        <button class="expense-type-btn" onclick="filterByFrequency('yearly')">Yearly</button>
+    </div>
+
+    <!-- Expenses Table -->
+    <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 20px; color: var(--primary);">Planned Expenses</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Frequency</th>
+                    <th>Amount (₹)</th>
+                    <th>Annual Amount (₹)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="expenseTableBody">
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <div class="empty-state-icon">💸</div>
+                        <p>No expenses planned yet</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add/Edit Expense Modal -->
+    <div class="modal" id="expenseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Future Expense</h2>
+                <button class="modal-close" onclick="closeExpenseModal()">×</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Left Panel: Expense Categories (Vertical) -->
+                <div class="expense-categories-panel">
+                    <div class="category-box">
+                        <h3>🏠 House Maintenance & Running Expenses</h3>
+                        <div class="category-grid">
+                            <div class="category-item" onclick="selectCategory(this, 'home_maintenance')">Home Maintenance</div>
+                            <div class="category-item" onclick="selectCategory(this, 'utilities')">Utilities</div>
+                            <div class="category-item" onclick="selectCategory(this, 'property_tax')">Property Tax</div>
+                            <div class="category-item" onclick="selectCategory(this, 'home_insurance')">Home Insurance</div>
+                            <div class="category-item" onclick="selectCategory(this, 'servant_staff')">Servant/Staff</div>
+                            <div class="category-item" onclick="selectCategory(this, 'household_items')">Household Items</div>
+                        </div>
+                    </div>
+
+                    <div class="category-box">
+                        <h3>👨‍👩‍👧 Kids & Schooling Expenses</h3>
+                        <div class="category-grid">
+                            <div class="category-item" onclick="selectCategory(this, 'school_fees')">School Fees</div>
+                            <div class="category-item" onclick="selectCategory(this, 'tuition_coaching')">Tuition/Coaching</div>
+                            <div class="category-item" onclick="selectCategory(this, 'school_supplies')">School Supplies</div>
+                            <div class="category-item" onclick="selectCategory(this, 'extracurricular')">Extracurricular</div>
+                            <div class="category-item" onclick="selectCategory(this, 'kids_medical')">Kids Medical</div>
+                            <div class="category-item" onclick="selectCategory(this, 'kids_allowance')">Allowance</div>
+                        </div>
+                    </div>
+
+                    <div class="category-box">
+                        <h3>💰 Regular Household Running Expenses</h3>
+                        <div class="category-grid">
+                            <div class="category-item" onclick="selectCategory(this, 'groceries')">Groceries</div>
+                            <div class="category-item" onclick="selectCategory(this, 'cooking_gas')">Cooking Gas</div>
+                            <div class="category-item" onclick="selectCategory(this, 'cleaning_supplies')">Cleaning Supplies</div>
+                            <div class="category-item" onclick="selectCategory(this, 'cooking_oil')">Cooking Oil/Spices</div>
+                            <div class="category-item" onclick="selectCategory(this, 'personal_hygiene')">Personal Hygiene</div>
+                            <div class="category-item" onclick="selectCategory(this, 'laundry')">Laundry/Dry Cleaning</div>
+                        </div>
+                    </div>
+
+                    <div class="category-box">
+                        <h3>🚗 Transportation & Other</h3>
+                        <div class="category-grid">
+                            <div class="category-item" onclick="selectCategory(this, 'vehicle_maintenance')">Vehicle Maintenance</div>
+                            <div class="category-item" onclick="selectCategory(this, 'fuel')">Fuel</div>
+                            <div class="category-item" onclick="selectCategory(this, 'insurance_other')">Insurance (Other)</div>
+                            <div class="category-item" onclick="selectCategory(this, 'medical')">Medical/Healthcare</div>
+                            <div class="category-item" onclick="selectCategory(this, 'entertainment')">Entertainment</div>
+                            <div class="category-item" onclick="selectCategory(this, 'other')">Other</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Expense Details Form -->
+                <div class="expense-form-panel">
+                    <input type="hidden" id="selectedCategory" />
+
+                    <!-- Expense Details Form -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expenseDescription">Description *</label>
+                            <input type="text" id="expenseDescription" placeholder="e.g., Monthly electricity bill" />
+                        </div>
+                        <div class="form-group">
+                            <label for="expenseAmount">Amount (₹) *</label>
+                            <input type="number" id="expenseAmount" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expenseFrequency">Frequency *</label>
+                    <select id="expenseFrequency" onchange="updateAnnualAmount()">
+                        <option value="">-- Select Frequency --</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly (Every 3 Months)</option>
+                        <option value="half-yearly">Half-Yearly (Every 6 Months)</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expenseAnnualAmount">Projected Annual Amount (₹)</label>
+                    <input type="number" id="expenseAnnualAmount" readonly placeholder="Auto-calculated" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expenseNextDue">Next Due Date</label>
+                    <input type="date" id="expenseNextDue" />
+                </div>
+                <div class="form-group">
+                    <label for="expensePriority">Priority</label>
+                    <select id="expensePriority">
+                        <option value="high">High</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="expenseNotes">Notes</label>
+                <textarea id="expenseNotes" placeholder="Add any relevant notes"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveExpense()">Save Expense</button>
+                <button class="btn btn-secondary" onclick="closeExpenseModal()">Cancel</button>
+            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allExpenses = [];
+        let currentFilter = 'all';
+        let editingId = null;
+
+        const frequencyMultiplier = {
+            'monthly': 12,
+            'quarterly': 4,
+            'half-yearly': 2,
+            'yearly': 1
+        };
+
+        const categoryLabels = {
+            'home_maintenance': 'Home Maintenance',
+            'utilities': 'Utilities',
+            'property_tax': 'Property Tax',
+            'home_insurance': 'Home Insurance',
+            'servant_staff': 'Servant/Staff',
+            'household_items': 'Household Items',
+            'school_fees': 'School Fees',
+            'tuition_coaching': 'Tuition/Coaching',
+            'school_supplies': 'School Supplies',
+            'extracurricular': 'Extracurricular',
+            'kids_medical': 'Kids Medical',
+            'kids_allowance': 'Kids Allowance',
+            'groceries': 'Groceries',
+            'cooking_gas': 'Cooking Gas',
+            'cleaning_supplies': 'Cleaning Supplies',
+            'cooking_oil': 'Cooking Oil',
+            'personal_hygiene': 'Personal Hygiene',
+            'laundry': 'Laundry',
+            'vehicle_maintenance': 'Vehicle Maintenance',
+            'fuel': 'Fuel',
+            'insurance_other': 'Insurance',
+            'medical': 'Medical/Healthcare',
+            'entertainment': 'Entertainment',
+            'other': 'Other'
+        };
+
+        function updateBreadcrumb() {
+            const selectedEntityId = localStorage.getItem('selectedEntity');
+            const breadcrumb = document.getElementById('entityBreadcrumb');
+            
+            if (selectedEntityId && breadcrumb) {
+                const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+                const selectedEntity = entities.find(e => e.id === selectedEntityId);
+                
+                if (selectedEntity) {
+                    const entityNameEl = document.getElementById('breadcrumbEntityName');
+                    const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                    
+                    if (entityNameEl && entityTypeEl) {
+                        entityNameEl.textContent = selectedEntity.name;
+                        entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                        breadcrumb.style.display = 'flex';
+                    }
+                }
+            }
+        }
+
+        function loadData() {
+            updateBreadcrumb();
+            allExpenses = JSON.parse(localStorage.getItem('futureExpenses') || '[]');
+            updateSummaryStats();
+            renderExpenseTable();
+        }
+
+        function onFYChange() {
+            const fy = document.getElementById('fyDropdown').value;
+            if (fy) {
+                loadData();
+            }
+        }
+
+        function updateSummaryStats() {
+            const annualExpenses = allExpenses.reduce((sum, exp) => {
+                const multiplier = frequencyMultiplier[exp.frequency] || 1;
+                return sum + ((exp.amount || 0) * multiplier);
+            }, 0);
+
+            const monthlyExpenses = allExpenses.filter(e => e.frequency === 'monthly').reduce((sum, e) => sum + (e.amount || 0), 0);
+            const quarterlyExpenses = allExpenses.filter(e => e.frequency === 'quarterly').reduce((sum, e) => sum + ((e.amount || 0) * 4), 0);
+            const yearlyExpenses = allExpenses.filter(e => e.frequency === 'yearly').reduce((sum, e) => sum + (e.amount || 0), 0);
+
+            document.getElementById('summaryStats').innerHTML = `
+                <div class="stat-card">
+                    <h4>Annual Projected</h4>
+                    <div class="value">₹ ${annualExpenses.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Monthly Avg</h4>
+                    <div class="value">₹ ${(annualExpenses / 12).toLocaleString('en-IN', {maximumFractionDigits: 0})}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Quarterly Total</h4>
+                    <div class="value">₹ ${(quarterlyExpenses).toLocaleString('en-IN', {maximumFractionDigits: 0})}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Yearly Fixed</h4>
+                    <div class="value">₹ ${yearlyExpenses.toLocaleString('en-IN')}</div>
+                </div>
+            `;
+        }
+
+        function filterByFrequency(frequency) {
+            currentFilter = frequency;
+            document.querySelectorAll('.expense-type-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderExpenseTable();
+        }
+
+        function renderExpenseTable() {
+            const tbody = document.getElementById('expenseTableBody');
+            let filtered = currentFilter === 'all' ? allExpenses : allExpenses.filter(e => e.frequency === currentFilter);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-icon">💸</div>
+                            <p>No expenses planned yet</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(expense => {
+                const multiplier = frequencyMultiplier[expense.frequency] || 1;
+                const annualAmount = (expense.amount || 0) * multiplier;
+                return `
+                    <tr>
+                        <td>${categoryLabels[expense.category] || expense.category}</td>
+                        <td>${expense.description}</td>
+                        <td><span class="badge ${expense.frequency}">${expense.frequency.toUpperCase()}</span></td>
+                        <td>₹ ${(expense.amount || 0).toLocaleString('en-IN')}</td>
+                        <td>₹ ${annualAmount.toLocaleString('en-IN')}</td>
+                        <td>
+                            <button class="btn btn-primary btn-small" onclick="editExpense('${expense.id}')">Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteExpense('${expense.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function selectCategory(element, category) {
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('selectedCategory').value = category;
+        }
+
+        function openAddExpenseModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Add Future Expense';
+            clearAllForms();
+            document.getElementById('expenseModal').classList.add('active');
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('expenseModal').classList.remove('active');
+        }
+
+        function updateAnnualAmount() {
+            const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const frequency = document.getElementById('expenseFrequency').value;
+            const multiplier = frequencyMultiplier[frequency] || 1;
+            document.getElementById('expenseAnnualAmount').value = (amount * multiplier).toFixed(2);
+        }
+
+        function clearAllForms() {
+            document.getElementById('selectedCategory').value = '';
+            document.getElementById('expenseDescription').value = '';
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseFrequency').value = '';
+            document.getElementById('expenseAnnualAmount').value = '';
+            document.getElementById('expenseNextDue').value = '';
+            document.getElementById('expensePriority').value = 'medium';
+            document.getElementById('expenseNotes').value = '';
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('selected'));
+        }
+
+        function saveExpense() {
+            const category = document.getElementById('selectedCategory').value;
+            const description = document.getElementById('expenseDescription').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const frequency = document.getElementById('expenseFrequency').value;
+
+            if (!category || !description || !amount || !frequency) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const expense = {
+                id: editingId || Date.now().toString(),
+                category: category,
+                description: description,
+                amount: amount,
+                frequency: frequency,
+                nextDue: document.getElementById('expenseNextDue').value,
+                priority: document.getElementById('expensePriority').value,
+                notes: document.getElementById('expenseNotes').value.trim(),
+                createdDate: new Date().toISOString()
+            };
+
+            if (editingId) {
+                allExpenses = allExpenses.map(e => e.id === editingId ? expense : e);
+            } else {
+                allExpenses.push(expense);
+            }
+
+            localStorage.setItem('futureExpenses', JSON.stringify(allExpenses));
+            loadData();
+            closeExpenseModal();
+            alert('Expense saved successfully!');
+        }
+
+        function editExpense(id) {
+            const expense = allExpenses.find(e => e.id === id);
+            if (!expense) return;
+
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Future Expense';
+            clearAllForms();
+
+            // Select category
+            const categoryElement = document.querySelector(`[onclick="selectCategory(this, '${expense.category}')"]`);
+            if (categoryElement) {
+                selectCategory(categoryElement, expense.category);
+            }
+
+            document.getElementById('expenseDescription').value = expense.description;
+            document.getElementById('expenseAmount').value = expense.amount;
+            document.getElementById('expenseFrequency').value = expense.frequency;
+            updateAnnualAmount();
+            document.getElementById('expenseNextDue').value = expense.nextDue || '';
+            document.getElementById('expensePriority').value = expense.priority || 'medium';
+            document.getElementById('expenseNotes').value = expense.notes || '';
+
+            document.getElementById('expenseModal').classList.add('active');
+        }
+
+        function deleteExpense(id) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                allExpenses = allExpenses.filter(e => e.id !== id);
+                localStorage.setItem('futureExpenses', JSON.stringify(allExpenses));
+                loadData();
+            }
+        }
+
+        // Add event listener for amount change
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            document.addEventListener('change', function(e) {
+                if (e.target.id === 'expenseAmount') {
+                    updateAnnualAmount();
+                }
+            });
+        });
+
+        window.addEventListener('load', function() {
+            // Sync font scale from localStorage or parent
+            const fontScale = localStorage.getItem('fontScale') || '0.95';
+            document.documentElement.style.setProperty('--font-scale', fontScale);
+            document.body.style.zoom = fontScale;
+            loadData();
+        });
+    </script>
+</body>
+</html>

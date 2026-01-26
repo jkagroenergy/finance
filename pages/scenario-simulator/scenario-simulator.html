@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scenario Simulator | FinCent</title>
+    <script src="numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .scenario-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .scenario-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
+        .scenario-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .scenario-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .scenario-description {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            width: 100%;
+        }
+
+        .simulator {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .simulator.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(91,59,214,0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .results {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 32px;
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .result-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .scenarios-grid { grid-template-columns: 1fr; }
+            .result-item { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎮 Scenario Simulator</h1>
+    <p class="subtitle">Explore what-if scenarios to understand impact on your financial goals</p>
+
+    <div class="scenarios-grid" id="scenariosList">
+        <!-- Scenarios will be generated here -->
+    </div>
+
+    <div class="simulator" id="incomeSimulator">
+        <h2 style="margin-bottom: 24px">📈 Income Change Scenario</h2>
+        
+        <div class="form-group">
+            <label class="form-label">Current Annual Income</label>
+            <input type="number" id="currentIncome" value="10000000" class="form-control">
+        </div>
+
+        <div class="slider-group">
+            <label class="form-label">Income Change (%)</label>
+            <input type="range" id="incomeChange" min="-50" max="100" value="0" class="slider" oninput="updateIncomeValue()">
+            <div class="slider-value">
+                <span>-50%</span>
+                <span id="incomeChangeValue">0%</span>
+                <span>+100%</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Years to Simulate</label>
+            <input type="number" id="incomeYears" value="5" min="1" max="30" class="form-control">
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="simulateIncome()">Run Simulation</button>
+            <button class="btn btn-secondary" style="background:#f1f5f9;color:var(--secondary);flex:1" onclick="backToScenarios()">Back</button>
+        </div>
+
+        <div class="results" id="incomeResults">
+            <h3 style="margin-bottom: 20px">Simulation Results</h3>
+            <div class="result-item">
+                <div class="result-label">New Annual Income</div>
+                <div class="result-value" id="newIncomeValue">₹0</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Annual Savings Impact</div>
+                <div class="result-value" id="savingsImpact">₹0</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Goal Achievement Impact</div>
+                <div class="result-value" id="goalImpact">+2 Years</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">5-Year Net Worth Impact</div>
+                <div class="result-value" id="networthImpact">₹25L</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="simulator" id="marketSimulator">
+        <h2 style="margin-bottom: 24px">📉 Market Downturn Scenario</h2>
+        
+        <div class="slider-group">
+            <label class="form-label">Market Decline (%)</label>
+            <input type="range" id="marketDecline" min="0" max="50" value="20" class="slider" oninput="updateMarketValue()">
+            <div class="slider-value">
+                <span>0%</span>
+                <span id="marketDeclineValue">20%</span>
+                <span>50%</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Current Portfolio Value (₹)</label>
+            <input type="number" id="portfolioValue" value="125000000" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Recovery Time (Years)</label>
+            <input type="number" id="recoveryTime" value="3" min="1" max="10" class="form-control">
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="simulateMarket()">Run Simulation</button>
+            <button class="btn btn-secondary" style="background:#f1f5f9;color:var(--secondary);flex:1" onclick="backToScenarios()">Back</button>
+        </div>
+
+        <div class="results" id="marketResults">
+            <h3 style="margin-bottom: 20px">Market Downturn Impact</h3>
+            <div class="result-item">
+                <div class="result-label">Immediate Portfolio Loss</div>
+                <div class="result-value" id="portfolioLoss">-₹25L</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Recovery Timeline</div>
+                <div class="result-value" id="recoveryTimeline">3 Years</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Goal Delay</div>
+                <div class="result-value" id="goalDelay">1-2 Years</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Recommendation</div>
+                <div class="result-value" id="recommendation">Hold & Rebalance</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="simulator" id="earlyRetireSimulator">
+        <h2 style="margin-bottom: 24px">🏖️ Early Retirement Scenario</h2>
+        
+        <div class="slider-group">
+            <label class="form-label">Early Retirement Years</label>
+            <input type="range" id="retirementYears" min="1" max="20" value="5" class="slider" oninput="updateRetirementValue()">
+            <div class="slider-value">
+                <span>1</span>
+                <span id="retirementYearsValue">5</span>
+                <span>20</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Current Portfolio Value (₹)</label>
+            <input type="number" id="retirePortfolio" value="125000000" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Annual Expenses After Retirement (₹)</label>
+            <input type="number" id="annualExpenses" value="2000000" class="form-control">
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="simulateRetirement()">Run Simulation</button>
+            <button class="btn btn-secondary" style="background:#f1f5f9;color:var(--secondary);flex:1" onclick="backToScenarios()">Back</button>
+        </div>
+
+        <div class="results" id="retirementResults">
+            <h3 style="margin-bottom: 20px">Early Retirement Feasibility</h3>
+            <div class="result-item">
+                <div class="result-label">Additional Savings Needed</div>
+                <div class="result-value" id="additionalSavings">₹18L</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Portfolio Sustainability</div>
+                <div class="result-value" id="sustainability">35+ Years</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Safety Margin</div>
+                <div class="result-value" id="safetyMargin">85%</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Verdict</div>
+                <div class="result-value" id="verdict">✓ Feasible</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const scenarios = [
+        {
+            icon: '📈',
+            title: 'Income Change',
+            description: 'Simulate the impact of salary increase or decrease on your financial goals',
+            id: 'income'
+        },
+        {
+            icon: '📉',
+            title: 'Market Downturn',
+            description: 'Understand portfolio impact during market crashes and recovery timeline',
+            id: 'market'
+        },
+        {
+            icon: '🏖️',
+            title: 'Early Retirement',
+            description: 'Check if you can retire earlier than planned',
+            id: 'retirement'
+        }
+    ];
+
+    function loadScenarios() {
+        const list = document.getElementById('scenariosList');
+        scenarios.forEach(scenario => {
+            const card = document.createElement('div');
+            card.className = 'scenario-card';
+            card.innerHTML = `
+                <div class="scenario-icon">${scenario.icon}</div>
+                <div class="scenario-title">${scenario.title}</div>
+                <div class="scenario-description">${scenario.description}</div>
+                <button class="btn btn-primary" onclick="selectScenario('${scenario.id}')">Simulate</button>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function selectScenario(id) {
+        document.getElementById('scenariosList').style.display = 'none';
+        
+        if (id === 'income') {
+            document.getElementById('incomeSimulator').classList.add('active');
+        } else if (id === 'market') {
+            document.getElementById('marketSimulator').classList.add('active');
+        } else if (id === 'retirement') {
+            document.getElementById('earlyRetireSimulator').classList.add('active');
+        }
+    }
+
+    function backToScenarios() {
+        document.getElementById('scenariosList').style.display = 'grid';
+        document.getElementById('incomeSimulator').classList.remove('active');
+        document.getElementById('marketSimulator').classList.remove('active');
+        document.getElementById('earlyRetireSimulator').classList.remove('active');
+        document.getElementById('incomeResults').classList.remove('active');
+        document.getElementById('marketResults').classList.remove('active');
+        document.getElementById('retirementResults').classList.remove('active');
+    }
+
+    function updateIncomeValue() {
+        document.getElementById('incomeChangeValue').textContent = document.getElementById('incomeChange').value + '%';
+    }
+
+    function updateMarketValue() {
+        document.getElementById('marketDeclineValue').textContent = document.getElementById('marketDecline').value + '%';
+    }
+
+    function updateRetirementValue() {
+        document.getElementById('retirementYearsValue').textContent = document.getElementById('retirementYears').value;
+    }
+
+    function simulateIncome() {
+        const current = parseFloat(document.getElementById('currentIncome').value);
+        const change = parseFloat(document.getElementById('incomeChange').value);
+        const newIncome = current * (1 + change / 100);
+        const impact = (newIncome - current) * 0.4; // Assuming 40% savings rate
+
+        document.getElementById('newIncomeValue').textContent = '₹' + Math.round(newIncome).toLocaleString('en-IN');
+        document.getElementById('savingsImpact').textContent = '₹' + Math.round(impact).toLocaleString('en-IN');
+        document.getElementById('incomeResults').classList.add('active');
+    }
+
+    function simulateMarket() {
+        const portfolio = parseFloat(document.getElementById('portfolioValue').value);
+        const decline = parseFloat(document.getElementById('marketDecline').value);
+        const loss = portfolio * decline / 100;
+
+        document.getElementById('portfolioLoss').textContent = '-₹' + Math.round(loss / 10000000).toLocaleString('en-IN') + ' Cr';
+        document.getElementById('marketResults').classList.add('active');
+    }
+
+    function simulateRetirement() {
+        const portfolio = parseFloat(document.getElementById('retirePortfolio').value);
+        const expenses = parseFloat(document.getElementById('annualExpenses').value);
+        const surplus = portfolio - (expenses * 25); // 25x rule
+
+        document.getElementById('additionalSavings').textContent = surplus > 0 ? '✓ None' : '₹' + Math.round(Math.abs(surplus)).toLocaleString('en-IN');
+        document.getElementById('retirementResults').classList.add('active');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadScenarios);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIP Tracking | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+            --font-scale: 0.95;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(91,59,214,0.2);
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--card) 0%, #f8fafc 100%);
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+
+        .summary-card h3 {
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .sips-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .sips-table thead {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .sips-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .sips-table td {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        .sips-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-paused {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-stopped {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: underline;
+            margin-right: 12px;
+        }
+
+        .action-btn:hover {
+            color: var(--primary-dark);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            margin: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e6edf8;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .sips-table { font-size: 12px; }
+            .sips-table th, .sips-table td { padding: 12px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb { background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%); border: 1px solid #e0d8f5; border-radius: 8px; padding: 12px 16px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
+        .breadcrumb-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .breadcrumb-entity-name { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .breadcrumb-entity-type { background: #e9e5ff; color: #6d28d9; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+<div class="container">
+    <h1>💰 SIP Tracking</h1>
+    <p class="subtitle">Manage and monitor your Systematic Investment Plans</p>
+
+    <div class="controls">
+        <button class="add-btn" onclick="openAddSIPModal()">+ Add New SIP</button>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h3>Active SIPs</h3>
+            <div class="value" id="activeSIPs">0</div>
+        </div>
+        <div class="summary-card">
+            <h3>Monthly SIP Amount</h3>
+            <div class="value" id="monthlySIPAmount">₹0</div>
+        </div>
+        <div class="summary-card">
+            <h3>Total Invested</h3>
+            <div class="value" id="totalInvested">₹0</div>
+        </div>
+        <div class="summary-card">
+            <h3>Concentration Risk</h3>
+            <div class="value" id="concentrationRisk">Low</div>
+        </div>
+    </div>
+
+    <table class="sips-table">
+        <thead>
+            <tr>
+                <th>Fund Name</th>
+                <th>Monthly Amount</th>
+                <th>Frequency</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th>Bank Account</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="sipsTableBody">
+            <!-- SIPs will be populated here -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Add SIP Modal -->
+<div class="modal" id="sipModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add New SIP</h2>
+            <button class="modal-close" onclick="closeSIPModal()">&times;</button>
+        </div>
+        <form onsubmit="handleSIPSubmit(event)">
+            <div class="form-group">
+                <label for="fundName">Fund Name</label>
+                <input type="text" id="fundName" placeholder="e.g., HDFC Mid-Cap Fund" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="monthlyAmount">Monthly Amount (₹)</label>
+                    <input type="number" id="monthlyAmount" placeholder="e.g., 10000" min="100" required>
+                </div>
+                <div class="form-group">
+                    <label for="frequency">Frequency</label>
+                    <select id="frequency" required>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                        <option value="half-yearly">Half-yearly</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date (Optional)</label>
+                    <input type="date" id="endDate">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="bankAccount">Bank Account</label>
+                <input type="text" id="bankAccount" placeholder="e.g., HDFC Savings" required>
+            </div>
+
+            <div class="form-group">
+                <label for="fundType">Fund Type</label>
+                <select id="fundType" required>
+                    <option value="equity">Equity</option>
+                    <option value="debt">Debt</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add SIP</button>
+                <button type="button" class="btn btn-secondary" onclick="closeSIPModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // SIP Management Functions
+    function updateBreadcrumb() {
+        const selectedEntityId = localStorage.getItem('selectedEntity');
+        const breadcrumb = document.getElementById('entityBreadcrumb');
+        
+        if (selectedEntityId && breadcrumb) {
+            const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+            const selectedEntity = entities.find(e => e.id === selectedEntityId);
+            
+            if (selectedEntity) {
+                const entityNameEl = document.getElementById('breadcrumbEntityName');
+                const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                
+                if (entityNameEl && entityTypeEl) {
+                    entityNameEl.textContent = selectedEntity.name;
+                    entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                    breadcrumb.style.display = 'flex';
+                }
+            }
+        }
+    }
+    
+    function initSIPs() {
+        updateBreadcrumb();
+        const sips = JSON.parse(localStorage.getItem('fincentSIPs') || '[]');
+        renderSIPsTable(sips);
+        updateSIPSummary(sips);
+    }
+
+    function renderSIPsTable(sips) {
+        const tbody = document.getElementById('sipsTableBody');
+        tbody.innerHTML = '';
+
+        if (sips.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:40px">No SIPs added yet. Start adding SIPs to track them here.</td></tr>';
+            return;
+        }
+
+        sips.forEach((sip, index) => {
+            const row = document.createElement('tr');
+            const statusClass = sip.status === 'active' ? 'status-active' : sip.status === 'paused' ? 'status-paused' : 'status-stopped';
+            const statusText = sip.status.charAt(0).toUpperCase() + sip.status.slice(1);
+
+            row.innerHTML = `
+                <td><strong>${sip.fundName}</strong></td>
+                <td>₹${sip.monthlyAmount.toLocaleString('en-IN')}</td>
+                <td>${sip.frequency.charAt(0).toUpperCase() + sip.frequency.slice(1)}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>${new Date(sip.startDate).toLocaleDateString('en-IN')}</td>
+                <td>${sip.bankAccount}</td>
+                <td>
+                    <button class="action-btn" onclick="editSIP(${index})">Edit</button>
+                    <button class="action-btn" onclick="deleteSIP(${index})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function updateSIPSummary(sips) {
+        const activeSIPs = sips.filter(s => s.status === 'active').length;
+        const monthlySIPAmount = sips
+            .filter(s => s.status === 'active')
+            .reduce((sum, s) => sum + s.monthlyAmount, 0);
+
+        // Calculate total invested (rough estimate)
+        const totalInvested = sips.reduce((sum, s) => {
+            const months = Math.floor((new Date() - new Date(s.startDate)) / (1000 * 60 * 60 * 24 * 30));
+            return sum + (s.monthlyAmount * Math.max(0, months));
+        }, 0);
+
+        // Calculate concentration risk
+        const fundCounts = {};
+        sips.forEach(s => {
+            fundCounts[s.fundType] = (fundCounts[s.fundType] || 0) + 1;
+        });
+        const concentrationRisk = Object.values(fundCounts).some(c => c > sips.length * 0.6) ? 'High' : 'Low';
+
+        document.getElementById('activeSIPs').textContent = activeSIPs;
+        document.getElementById('monthlySIPAmount').textContent = '₹' + monthlySIPAmount.toLocaleString('en-IN');
+        document.getElementById('totalInvested').textContent = '₹' + totalInvested.toLocaleString('en-IN');
+        document.getElementById('concentrationRisk').textContent = concentrationRisk;
+    }
+
+    function openAddSIPModal() {
+        document.getElementById('fundName').value = '';
+        document.getElementById('monthlyAmount').value = '';
+        document.getElementById('frequency').value = 'monthly';
+        document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('endDate').value = '';
+        document.getElementById('bankAccount').value = '';
+        document.getElementById('fundType').value = 'equity';
+        document.getElementById('sipModal').classList.add('active');
+    }
+
+    function closeSIPModal() {
+        document.getElementById('sipModal').classList.remove('active');
+    }
+
+    function handleSIPSubmit(e) {
+        e.preventDefault();
+
+        const sip = {
+            fundName: document.getElementById('fundName').value,
+            monthlyAmount: parseFloat(document.getElementById('monthlyAmount').value),
+            frequency: document.getElementById('frequency').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value || null,
+            bankAccount: document.getElementById('bankAccount').value,
+            fundType: document.getElementById('fundType').value,
+            status: 'active',
+            createdAt: new Date().toISOString()
+        };
+
+        const sips = JSON.parse(localStorage.getItem('fincentSIPs') || '[]');
+        sips.push(sip);
+        localStorage.setItem('fincentSIPs', JSON.stringify(sips));
+
+        renderSIPsTable(sips);
+        updateSIPSummary(sips);
+        closeSIPModal();
+        alert('SIP added successfully!');
+    }
+
+    function deleteSIP(index) {
+        if (confirm('Are you sure you want to delete this SIP?')) {
+            const sips = JSON.parse(localStorage.getItem('fincentSIPs') || '[]');
+            sips.splice(index, 1);
+            localStorage.setItem('fincentSIPs', JSON.stringify(sips));
+            renderSIPsTable(sips);
+            updateSIPSummary(sips);
+        }
+    }
+
+    function editSIP(index) {
+        alert('Edit functionality will be available soon');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initSIPs);
+</script>
+
+</body>
+</html>

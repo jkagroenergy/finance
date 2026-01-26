@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Income Details | FinCent</title>
+    <script src="../../js/common.js"></script>
+    <script src="../../numberToWords.js"></script>
+
+    <style>
+        :root {
+            /* Revised purple color scheme from index.html */
+            --brand-purple-1: #5b3bd6; /* deep */
+            --brand-purple-2: #7b5cf2; /* mid */
+            --brand-purple-3: #8b6ff8; /* light */
+            --accent-green: #1fc08b;
+
+            /* Semantic aliases */
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+            --font-scale: 0.95;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0 4px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-card h4 {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .income-type-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .income-type-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--secondary);
+        }
+
+        .income-type-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .income-type-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .section-divider {
+            margin: 30px 0;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 30px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .deduction-box {
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid var(--success);
+            margin-top: 10px;
+        }
+
+        .deduction-box.tax {
+            background: #fef3c7;
+            border-left-color: var(--warning);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .table th {
+            background: #f1f5f9;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--secondary);
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: var(--primary);
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.salary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.rental {
+            background: #fcd34d;
+            color: #92400e;
+        }
+
+        .badge.investment {
+            background: #fca5a5;
+            color: #991b1b;
+        }
+
+        .fy-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .fy-selector label {
+            font-weight: 600;
+            color: var(--secondary);
+            white-space: nowrap;
+        }
+
+        .fy-selector select {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 180px;
+            background: white;
+            color: var(--secondary);
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table {
+                font-size: 11px;
+            }
+
+            .table th, .table td {
+                padding: 8px;
+            }
+        }
+
+        /* Breadcrumb Styling */
+        .entity-breadcrumb {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f3ff 100%);
+            border: 1px solid #e0d8f5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .breadcrumb-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .breadcrumb-entity-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .breadcrumb-entity-type {
+            background: #e9e5ff;
+            color: #6d28d9;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>Income Details Management</h1>
+        <button class="btn btn-primary" onclick="openAddIncomeModal()">+ Add Income</button>
+    </div>
+
+    <!-- Entity Breadcrumb -->
+    <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+        <span class="breadcrumb-label">Viewing:</span>
+        <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+        <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+    </div>
+
+    <div class="fy-selector">
+        <label for="fyDropdown">Financial Year:</label>
+        <select id="fyDropdown" onchange="onFYChange()">
+            <option value="">-- Select Financial Year --</option>
+            <option value="2025-26">2025-26</option>
+            <option value="2024-25">2024-25</option>
+            <option value="2023-24">2023-24</option>
+            <option value="2022-23">2022-23</option>
+        </select>
+    </div>
+
+    <div class="summary-stats" id="summaryStats"></div>
+
+    <!-- Income Type Filters -->
+    <div class="income-type-tabs">
+        <button class="income-type-btn active" onclick="filterByType('all')">All Income</button>
+        <button class="income-type-btn" onclick="filterByType('salary')">Salary</button>
+        <button class="income-type-btn" onclick="filterByType('rental')">Rental</button>
+        <button class="income-type-btn" onclick="filterByType('interest')">Interest</button>
+        <button class="income-type-btn" onclick="filterByType('dividend')">Dividend</button>
+        <button class="income-type-btn" onclick="filterByType('secondary')">Secondary Job</button>
+        <button class="income-type-btn" onclick="filterByType('other')">Other</button>
+    </div>
+
+    <!-- Income Sources Table -->
+    <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <h3 style="margin-bottom: 20px; color: var(--primary);">Income Sources</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Annual Amount (₹)</th>
+                    <th>Monthly Avg (₹)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="incomeTableBody">
+                <tr>
+                    <td colspan="5" class="empty-state">
+                        <div class="empty-state-icon">💰</div>
+                        <p>No income sources added yet</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add/Edit Income Modal -->
+    <div class="modal" id="incomeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Income Source</h2>
+                <button class="modal-close" onclick="closeIncomeModal()">×</button>
+            </div>
+
+            <!-- Income Type Selection -->
+            <div class="form-group">
+                <label for="incomeTypeSelect">Income Type *</label>
+                <select id="incomeTypeSelect" onchange="onIncomeTypeChange()">
+                    <option value="">-- Select Income Type --</option>
+                    <option value="salary">Salary / Wages</option>
+                    <option value="rental">Rental Income</option>
+                    <option value="interest">Interest Income</option>
+                    <option value="dividend">Dividend Income</option>
+                    <option value="secondary">Secondary Job Income</option>
+                    <option value="capital_gains">Capital Gains</option>
+                    <option value="other">Other Income</option>
+                </select>
+            </div>
+
+            <!-- Salary Section -->
+            <div id="salarySection" style="display: none;">
+                <div class="section-title">💼 Salary Income Details</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="salaryGross">Gross Salary (₹) *</label>
+                        <input type="number" id="salaryGross" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="salaryEmployer">Employer Name *</label>
+                        <input type="text" id="salaryEmployer" placeholder="e.g., ABC Ltd" />
+                    </div>
+                </div>
+
+                <div class="deduction-box">
+                    <div class="section-title" style="margin-bottom: 15px;">📊 Deductions & Tax</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salaryHRA">HRA / Allowance (₹)</label>
+                            <input type="number" id="salaryHRA" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="salarySDA">Special Allowance / DA (₹)</label>
+                            <input type="number" id="salarySDA" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salaryPF">PF Contribution (₹)</label>
+                            <input type="number" id="salaryPF" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="salaryNPS">NPS Contribution (₹)</label>
+                            <input type="number" id="salaryNPS" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salaryVPF">Voluntary PF / Additional Savings (₹)</label>
+                            <input type="number" id="salaryVPF" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="salaryMedical">Medical / Insurance Deduction (₹)</label>
+                            <input type="number" id="salaryMedical" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salaryIncomeTax">Income Tax TDS (₹)</label>
+                            <input type="number" id="salaryIncomeTax" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="salaryOtherDeduction">Other Deductions (₹)</label>
+                            <input type="number" id="salaryOtherDeduction" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rental Section -->
+            <div id="rentalSection" style="display: none;">
+                <div class="section-title">🏠 Rental Income Details</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rentalGrossRent">Gross Rental Income (₹) *</label>
+                        <input type="number" id="rentalGrossRent" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="rentalProperty">Property Description *</label>
+                        <input type="text" id="rentalProperty" placeholder="e.g., 2BHK Apartment" />
+                    </div>
+                </div>
+
+                <div class="deduction-box">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rentalMaintenance">Maintenance Charges (₹)</label>
+                            <input type="number" id="rentalMaintenance" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="rentalTax">Property Tax (₹)</label>
+                            <input type="number" id="rentalTax" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rentalInsurance">Insurance Premium (₹)</label>
+                            <input type="number" id="rentalInsurance" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="rentalRepair">Repair & Maintenance (₹)</label>
+                            <input type="number" id="rentalRepair" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rentalDepreciation">Depreciation Claimed (₹)</label>
+                            <input type="number" id="rentalDepreciation" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                        <div class="form-group">
+                            <label for="rentalInterest">Loan Interest (₹)</label>
+                            <input type="number" id="rentalInterest" placeholder="0.00" min="0" step="0.01" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interest/Dividend Section -->
+            <div id="investmentIncomeSection" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="invIncomeAmount">Annual Income (₹) *</label>
+                        <input type="number" id="invIncomeAmount" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="invIncomeSource">Source / Bank / Company *</label>
+                        <input type="text" id="invIncomeSource" placeholder="e.g., ICICI Bank, HDFC Ltd" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="invIncomeTDS">TDS Deducted (₹)</label>
+                        <input type="number" id="invIncomeTDS" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="invIncomeFrequency">Payment Frequency</label>
+                        <select id="invIncomeFrequency">
+                            <option value="annual">Annual</option>
+                            <option value="semi-annual">Semi-Annual</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generic Section for Secondary Job & Capital Gains -->
+            <div id="genericSection" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="genericAmount">Annual Income (₹) *</label>
+                        <input type="number" id="genericAmount" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="genericDescription">Description *</label>
+                        <input type="text" id="genericDescription" placeholder="e.g., Freelance work, Stock gains" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="genericTDS">TDS / Tax Paid (₹)</label>
+                        <input type="number" id="genericTDS" placeholder="0.00" min="0" step="0.01" />
+                    </div>
+                    <div class="form-group">
+                        <label for="genericNotes">Notes</label>
+                        <input type="text" id="genericNotes" placeholder="Additional details" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Notes -->
+            <div class="form-group">
+                <label for="incomeNotes">Additional Notes</label>
+                <textarea id="incomeNotes" placeholder="Any additional information or tax-related notes"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveIncome()">Save Income</button>
+                <button class="btn btn-secondary" onclick="closeIncomeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allIncomes = [];
+        let currentFilter = 'all';
+        let editingId = null;
+
+        const incomeTypeLabels = {
+            'salary': 'Salary / Wages',
+            'rental': 'Rental Income',
+            'interest': 'Interest Income',
+            'dividend': 'Dividend Income',
+            'secondary': 'Secondary Job',
+            'capital_gains': 'Capital Gains',
+            'other': 'Other Income'
+        };
+
+        function updateBreadcrumb() {
+            const selectedEntityId = localStorage.getItem('selectedEntity');
+            const breadcrumb = document.getElementById('entityBreadcrumb');
+            
+            if (selectedEntityId && breadcrumb) {
+                const entities = JSON.parse(localStorage.getItem('fincentEntities') || '[]');
+                const selectedEntity = entities.find(e => e.id === selectedEntityId);
+                
+                if (selectedEntity) {
+                    const entityNameEl = document.getElementById('breadcrumbEntityName');
+                    const entityTypeEl = document.getElementById('breadcrumbEntityType');
+                    
+                    if (entityNameEl && entityTypeEl) {
+                        entityNameEl.textContent = selectedEntity.name;
+                        entityTypeEl.textContent = getEntityTypeLabel(selectedEntity.type);
+                        breadcrumb.style.display = 'flex';
+                    }
+                }
+            }
+        }
+
+        function loadData() {
+            updateBreadcrumb();
+            allIncomes = JSON.parse(localStorage.getItem('incomeDetails') || '[]');
+            allIncomes = JSON.parse(localStorage.getItem('incomeDetails') || '[]');
+            updateSummaryStats();
+            renderIncomeTable();
+        }
+
+        function onFYChange() {
+            const fy = document.getElementById('fyDropdown').value;
+            if (fy) {
+                loadData();
+            }
+        }
+
+        function updateSummaryStats() {
+            const totalIncome = allIncomes.reduce((sum, income) => sum + (income.netAmount || income.amount || 0), 0);
+            const salaryIncome = allIncomes.filter(i => i.type === 'salary').reduce((sum, i) => sum + (i.netAmount || i.amount || 0), 0);
+            const rentalIncome = allIncomes.filter(i => i.type === 'rental').reduce((sum, i) => sum + (i.netAmount || i.amount || 0), 0);
+            const investmentIncome = allIncomes.filter(i => ['interest', 'dividend'].includes(i.type)).reduce((sum, i) => sum + (i.netAmount || i.amount || 0), 0);
+
+            document.getElementById('summaryStats').innerHTML = `
+                <div class="stat-card">
+                    <h4>Total Annual Income</h4>
+                    <div class="value">₹ ${totalIncome.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Salary Income</h4>
+                    <div class="value">₹ ${salaryIncome.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Rental Income</h4>
+                    <div class="value">₹ ${rentalIncome.toLocaleString('en-IN')}</div>
+                </div>
+                <div class="stat-card">
+                    <h4>Investment Income</h4>
+                    <div class="value">₹ ${investmentIncome.toLocaleString('en-IN')}</div>
+                </div>
+            `;
+        }
+
+        function filterByType(type) {
+            currentFilter = type;
+            document.querySelectorAll('.income-type-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderIncomeTable();
+        }
+
+        function renderIncomeTable() {
+            const tbody = document.getElementById('incomeTableBody');
+            let filtered = currentFilter === 'all' ? allIncomes : allIncomes.filter(i => i.type === currentFilter);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <div class="empty-state-icon">💰</div>
+                            <p>No income sources added yet</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(income => `
+                <tr>
+                    <td><span class="badge ${income.type}">${incomeTypeLabels[income.type] || income.type}</span></td>
+                    <td>${income.description}</td>
+                    <td>₹ ${(income.amount || 0).toLocaleString('en-IN')}</td>
+                    <td>₹ ${((income.amount || 0) / 12).toLocaleString('en-IN', {maximumFractionDigits: 0})}</td>
+                    <td>
+                        <button class="btn btn-primary btn-small" onclick="editIncome('${income.id}')">Edit</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteIncome('${income.id}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddIncomeModal() {
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Add Income Source';
+            clearAllForms();
+            document.getElementById('incomeModal').classList.add('active');
+        }
+
+        function closeIncomeModal() {
+            document.getElementById('incomeModal').classList.remove('active');
+        }
+
+        function onIncomeTypeChange() {
+            const type = document.getElementById('incomeTypeSelect').value;
+            
+            // Hide all sections
+            document.getElementById('salarySection').style.display = 'none';
+            document.getElementById('rentalSection').style.display = 'none';
+            document.getElementById('investmentIncomeSection').style.display = 'none';
+            document.getElementById('genericSection').style.display = 'none';
+
+            // Show relevant section
+            if (type === 'salary') {
+                document.getElementById('salarySection').style.display = 'block';
+            } else if (type === 'rental') {
+                document.getElementById('rentalSection').style.display = 'block';
+            } else if (['interest', 'dividend'].includes(type)) {
+                document.getElementById('investmentIncomeSection').style.display = 'block';
+            } else if (['secondary', 'capital_gains', 'other'].includes(type)) {
+                document.getElementById('genericSection').style.display = 'block';
+            }
+        }
+
+        function clearAllForms() {
+            document.getElementById('incomeTypeSelect').value = '';
+            
+            // Salary fields
+            document.getElementById('salaryGross').value = '';
+            document.getElementById('salaryEmployer').value = '';
+            document.getElementById('salaryHRA').value = '';
+            document.getElementById('salarySDA').value = '';
+            document.getElementById('salaryPF').value = '';
+            document.getElementById('salaryNPS').value = '';
+            document.getElementById('salaryVPF').value = '';
+            document.getElementById('salaryMedical').value = '';
+            document.getElementById('salaryIncomeTax').value = '';
+            document.getElementById('salaryOtherDeduction').value = '';
+
+            // Rental fields
+            document.getElementById('rentalGrossRent').value = '';
+            document.getElementById('rentalProperty').value = '';
+            document.getElementById('rentalMaintenance').value = '';
+            document.getElementById('rentalTax').value = '';
+            document.getElementById('rentalInsurance').value = '';
+            document.getElementById('rentalRepair').value = '';
+            document.getElementById('rentalDepreciation').value = '';
+            document.getElementById('rentalInterest').value = '';
+
+            // Investment/Interest/Dividend fields
+            document.getElementById('invIncomeAmount').value = '';
+            document.getElementById('invIncomeSource').value = '';
+            document.getElementById('invIncomeTDS').value = '';
+            document.getElementById('invIncomeFrequency').value = 'annual';
+
+            // Generic fields
+            document.getElementById('genericAmount').value = '';
+            document.getElementById('genericDescription').value = '';
+            document.getElementById('genericTDS').value = '';
+            document.getElementById('genericNotes').value = '';
+
+            // Common
+            document.getElementById('incomeNotes').value = '';
+        }
+
+        function saveIncome() {
+            const type = document.getElementById('incomeTypeSelect').value;
+            if (!type) {
+                alert('Please select income type');
+                return;
+            }
+
+            let income = {
+                id: editingId || Date.now().toString(),
+                type: type,
+                createdDate: new Date().toISOString()
+            };
+
+            if (type === 'salary') {
+                const gross = parseFloat(document.getElementById('salaryGross').value) || 0;
+                const employer = document.getElementById('salaryEmployer').value.trim();
+                
+                if (!gross || !employer) {
+                    alert('Please fill in Gross Salary and Employer Name');
+                    return;
+                }
+
+                const pf = parseFloat(document.getElementById('salaryPF').value) || 0;
+                const nps = parseFloat(document.getElementById('salaryNPS').value) || 0;
+                const vpf = parseFloat(document.getElementById('salaryVPF').value) || 0;
+                const medical = parseFloat(document.getElementById('salaryMedical').value) || 0;
+                const tax = parseFloat(document.getElementById('salaryIncomeTax').value) || 0;
+                const other = parseFloat(document.getElementById('salaryOtherDeduction').value) || 0;
+                const totalDeductions = pf + nps + vpf + medical + tax + other;
+
+                income.description = employer;
+                income.amount = gross;
+                income.netAmount = gross - totalDeductions;
+                income.details = {
+                    gross: gross,
+                    employer: employer,
+                    hra: parseFloat(document.getElementById('salaryHRA').value) || 0,
+                    sda: parseFloat(document.getElementById('salarySDA').value) || 0,
+                    pf: pf,
+                    nps: nps,
+                    vpf: vpf,
+                    medical: medical,
+                    incomeTax: tax,
+                    otherDeduction: other,
+                    totalDeductions: totalDeductions
+                };
+            } else if (type === 'rental') {
+                const grossRent = parseFloat(document.getElementById('rentalGrossRent').value) || 0;
+                const property = document.getElementById('rentalProperty').value.trim();
+                
+                if (!grossRent || !property) {
+                    alert('Please fill in Gross Rental Income and Property Description');
+                    return;
+                }
+
+                const maintenance = parseFloat(document.getElementById('rentalMaintenance').value) || 0;
+                const propertyTax = parseFloat(document.getElementById('rentalTax').value) || 0;
+                const insurance = parseFloat(document.getElementById('rentalInsurance').value) || 0;
+                const repair = parseFloat(document.getElementById('rentalRepair').value) || 0;
+                const depreciation = parseFloat(document.getElementById('rentalDepreciation').value) || 0;
+                const loanInterest = parseFloat(document.getElementById('rentalInterest').value) || 0;
+                const totalDeductions = maintenance + propertyTax + insurance + repair + depreciation + loanInterest;
+
+                income.description = property;
+                income.amount = grossRent;
+                income.netAmount = grossRent - totalDeductions;
+                income.details = {
+                    grossRent: grossRent,
+                    property: property,
+                    maintenance: maintenance,
+                    propertyTax: propertyTax,
+                    insurance: insurance,
+                    repair: repair,
+                    depreciation: depreciation,
+                    loanInterest: loanInterest,
+                    totalDeductions: totalDeductions
+                };
+            } else if (['interest', 'dividend'].includes(type)) {
+                const amount = parseFloat(document.getElementById('invIncomeAmount').value) || 0;
+                const source = document.getElementById('invIncomeSource').value.trim();
+                
+                if (!amount || !source) {
+                    alert('Please fill in Income Amount and Source');
+                    return;
+                }
+
+                const tds = parseFloat(document.getElementById('invIncomeTDS').value) || 0;
+
+                income.description = source;
+                income.amount = amount;
+                income.netAmount = amount - tds;
+                income.details = {
+                    amount: amount,
+                    source: source,
+                    tds: tds,
+                    frequency: document.getElementById('invIncomeFrequency').value
+                };
+            } else {
+                const amount = parseFloat(document.getElementById('genericAmount').value) || 0;
+                const description = document.getElementById('genericDescription').value.trim();
+                
+                if (!amount || !description) {
+                    alert('Please fill in Income Amount and Description');
+                    return;
+                }
+
+                const tds = parseFloat(document.getElementById('genericTDS').value) || 0;
+
+                income.description = description;
+                income.amount = amount;
+                income.netAmount = amount - tds;
+                income.details = {
+                    amount: amount,
+                    tds: tds,
+                    notes: document.getElementById('genericNotes').value.trim()
+                };
+            }
+
+            income.notes = document.getElementById('incomeNotes').value.trim();
+
+            // Update or add
+            if (editingId) {
+                allIncomes = allIncomes.map(i => i.id === editingId ? income : i);
+            } else {
+                allIncomes.push(income);
+            }
+
+            localStorage.setItem('incomeDetails', JSON.stringify(allIncomes));
+            loadData();
+            closeIncomeModal();
+            alert('Income saved successfully!');
+        }
+
+        function editIncome(id) {
+            const income = allIncomes.find(i => i.id === id);
+            if (!income) return;
+
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Income Source';
+            clearAllForms();
+            
+            document.getElementById('incomeTypeSelect').value = income.type;
+            onIncomeTypeChange();
+
+            if (income.type === 'salary' && income.details) {
+                document.getElementById('salaryGross').value = income.details.gross || '';
+                document.getElementById('salaryEmployer').value = income.details.employer || '';
+                document.getElementById('salaryHRA').value = income.details.hra || '';
+                document.getElementById('salarySDA').value = income.details.sda || '';
+                document.getElementById('salaryPF').value = income.details.pf || '';
+                document.getElementById('salaryNPS').value = income.details.nps || '';
+                document.getElementById('salaryVPF').value = income.details.vpf || '';
+                document.getElementById('salaryMedical').value = income.details.medical || '';
+                document.getElementById('salaryIncomeTax').value = income.details.incomeTax || '';
+                document.getElementById('salaryOtherDeduction').value = income.details.otherDeduction || '';
+            } else if (income.type === 'rental' && income.details) {
+                document.getElementById('rentalGrossRent').value = income.details.grossRent || '';
+                document.getElementById('rentalProperty').value = income.details.property || '';
+                document.getElementById('rentalMaintenance').value = income.details.maintenance || '';
+                document.getElementById('rentalTax').value = income.details.propertyTax || '';
+                document.getElementById('rentalInsurance').value = income.details.insurance || '';
+                document.getElementById('rentalRepair').value = income.details.repair || '';
+                document.getElementById('rentalDepreciation').value = income.details.depreciation || '';
+                document.getElementById('rentalInterest').value = income.details.loanInterest || '';
+            } else if (['interest', 'dividend'].includes(income.type) && income.details) {
+                document.getElementById('invIncomeAmount').value = income.details.amount || '';
+                document.getElementById('invIncomeSource').value = income.details.source || '';
+                document.getElementById('invIncomeTDS').value = income.details.tds || '';
+                document.getElementById('invIncomeFrequency').value = income.details.frequency || 'annual';
+            } else if (income.details) {
+                document.getElementById('genericAmount').value = income.details.amount || '';
+                document.getElementById('genericDescription').value = income.description || '';
+                document.getElementById('genericTDS').value = income.details.tds || '';
+                document.getElementById('genericNotes').value = income.details.notes || '';
+            }
+
+            document.getElementById('incomeNotes').value = income.notes || '';
+            document.getElementById('incomeModal').classList.add('active');
+        }
+
+        function deleteIncome(id) {
+            if (confirm('Are you sure you want to delete this income source?')) {
+                allIncomes = allIncomes.filter(i => i.id !== id);
+                localStorage.setItem('incomeDetails', JSON.stringify(allIncomes));
+                loadData();
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', function() {
+            const fontScale = localStorage.getItem('fontScale') || '0.95';
+            document.documentElement.style.setProperty('--font-scale', fontScale);
+            document.body.style.zoom = fontScale;
+            loadData();
+        });
+    </script>
+</body>
+</html>

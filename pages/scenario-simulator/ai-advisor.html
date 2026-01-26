@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Advisor | FinCent</title>
+    <script src="numberToWords.js"></script>
+
+    <style>
+        :root {
+            --brand-purple-1: #5b3bd6;
+            --brand-purple-2: #7b5cf2;
+            --brand-purple-3: #8b6ff8;
+            --accent-green: #1fc08b;
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a;
+            --success: #10b981;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --card: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Inter", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: var(--light);
+            color: var(--secondary);
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .chat-container {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.assistant .message-bubble {
+            background: #f1f5f9;
+            color: var(--secondary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+        }
+
+        .message.user .message-avatar {
+            background: #e2e8f0;
+            color: var(--secondary);
+        }
+
+        .input-area {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .suggestions {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-top: 24px;
+        }
+
+        .suggestions h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .suggestion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .suggestion-btn {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            text-align: left;
+            color: var(--secondary);
+        }
+
+        .suggestion-btn:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+            color: var(--primary);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @media(max-width: 768px) {
+            body { padding: 16px; }
+            .chat-container { height: 500px; }
+            .message-bubble { max-width: 85%; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🤖 AI Financial Advisor</h1>
+    <p class="subtitle">Chat with our AI advisor for personalized financial guidance and answers to your questions</p>
+
+    <div class="chat-container">
+        <div class="messages" id="messagesContainer">
+            <div class="message assistant">
+                <div class="message-avatar">🤖</div>
+                <div class="message-bubble">Hi! I'm your FinCent AI Advisor. I can help you with investment strategies, tax planning, retirement planning, and more. What would you like to know?</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Ask me anything about your finances..." class="input-field" onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <div class="suggestions">
+        <h2>💡 Quick Questions</h2>
+        <div class="suggestion-grid">
+            <button class="suggestion-btn" onclick="askQuestion('Should I increase my SIP?')">💰 Should I increase my SIP?</button>
+            <button class="suggestion-btn" onclick="askQuestion('How can I save more taxes?')">🏛️ How can I save more taxes?</button>
+            <button class="suggestion-btn" onclick="askQuestion('Is my portfolio well-diversified?')">📊 Is my portfolio well-diversified?</button>
+            <button class="suggestion-btn" onclick="askQuestion('When should I retire?')">🏖️ When should I retire?</button>
+            <button class="suggestion-btn" onclick="askQuestion('Should I buy real estate?')">🏠 Should I buy real estate?</button>
+            <button class="suggestion-btn" onclick="askQuestion('How to improve credit score?')">💳 How to improve credit score?</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const aiResponses = {
+        'sip': 'Based on your profile, increasing your SIP by 10-15% annually is a good strategy. This helps counter inflation and accelerates goal achievement. Consider increasing after each salary hike.',
+        'tax': 'You can save up to ₹1.5L under Section 80C through ELSS, PPF, or insurance. Additionally, consider Section 80D for health insurance (₹25K), 80E for education loans, and Section 24 for home loans.',
+        'diversified': 'Your current portfolio composition is 60% Equity, 30% Debt, 10% Others. For your risk profile, this is well-diversified. Ensure your equity holdings span different sectors and market caps.',
+        'retire': 'With your current savings rate and portfolio growth, retirement at age 55-58 is feasible. This assumes 8% annual returns and 5% inflation. Run the scenario simulator for precise calculations.',
+        'realestate': 'Real estate can be a good long-term investment, but consider your liquidity needs first. Ensure you have 6-12 months emergency funds before investing in property.',
+        'creditscore': 'To improve your credit score: Maintain low credit utilization (below 30%), pay all bills on time, don\'t close old credit cards, and avoid applying for multiple new credits simultaneously.',
+        'default': 'That\'s a great question! Based on your financial profile and goals, here\'s my recommendation: diversify your portfolio, maintain regular investments through SIPs, and regularly review your financial plan.'
+    };
+
+    function addMessage(text, isUser) {
+        const container = document.getElementById('messagesContainer');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.textContent = isUser ? '👤' : '🤖';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = text;
+        
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+        container.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        setTimeout(() => {
+            container.scrollTop = container.scrollHeight;
+        }, 0);
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        
+        if (!text) return;
+        
+        addMessage(text, true);
+        input.value = '';
+        
+        // Simulate AI thinking
+        setTimeout(() => {
+            const response = getAIResponse(text);
+            addMessage(response, false);
+        }, 500);
+    }
+
+    function askQuestion(question) {
+        document.getElementById('userInput').value = question;
+        sendMessage();
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function getAIResponse(question) {
+        const lowerQuestion = question.toLowerCase();
+        
+        if (lowerQuestion.includes('sip') || lowerQuestion.includes('increase')) {
+            return aiResponses.sip;
+        } else if (lowerQuestion.includes('tax') || lowerQuestion.includes('save tax')) {
+            return aiResponses.tax;
+        } else if (lowerQuestion.includes('diversif')) {
+            return aiResponses.diversified;
+        } else if (lowerQuestion.includes('retire')) {
+            return aiResponses.retire;
+        } else if (lowerQuestion.includes('real estate') || lowerQuestion.includes('property')) {
+            return aiResponses.realestate;
+        } else if (lowerQuestion.includes('credit')) {
+            return aiResponses.creditscore;
+        } else {
+            return aiResponses.default;
+        }
+    }
+
+    // Initial greeting
+    window.addEventListener('load', () => {
+        const container = document.getElementById('messagesContainer');
+        if (container.children.length === 1) {
+            // Only initial message, good
+        }
+    });
+</script>
+
+</body>
+</html>

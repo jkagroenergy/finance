@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinCent | Personal Financial Dashboard</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/home.css">
+    <script src="../numberToWords.js"></script>
+</head>
+
+<body>
+
+<!-- Change Password Modal -->
+<div class="modal" id="changePasswordModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Change Password</h2>
+            <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+        </div>
+        <form onsubmit="handleChangePassword(event)">
+            <div class="form-group">
+                <label for="currentPassword">Current Password</label>
+                <input type="password" id="currentPassword" placeholder="Enter current password" required>
+                <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password" required>
+                <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password" required>
+                <div class="error-message"></div>
+            </div>
+            <button type="submit" class="btn-submit">Change Password</button>
+        </form>
+    </div>
+</div>
+
+<header>
+    <h1>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        FinCent
+    </h1>
+    <div class="profile-controls">
+        <div class="profile-menu">
+            <button class="profile-btn" onclick="toggleProfileMenu()" title="Profile Menu">👤</button>
+            <div class="profile-dropdown" id="profileDropdown">
+                <!-- Entity Switcher Section -->
+                <div class="entity-switcher-section">
+                    <div class="entity-switcher-title">Your Entities</div>
+                    <div id="entitySwitcher">
+                        <!-- Populated by loadEntitiesForMenu() -->
+                    </div>
+                </div>
+                
+                <!-- Management Section -->
+                <div class="profile-dropdown-section">
+                    <a href="#" onclick="openEntityManagement(event)">Manage Entities</a>
+                </div>
+                
+                <!-- Account Section -->
+                <div class="profile-dropdown-section">
+                    <a href="#" onclick="openChangePasswordModal(event); closeProfileMenu();">Change Password</a>
+                    <button onclick="logout(); closeProfileMenu();">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="main-wrapper">
+    <nav class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li><a href="#" onclick="navigateTo('dashboard')" class="active" data-page="dashboard">Dashboard</a></li>
+            <li>
+                <a href="#" onclick="toggleSubmenu('financialMenu')" class="submenu-toggle">Financial Details</a>
+                <ul class="submenu" id="financialMenu">
+                    <li><a href="#" onclick="navigateTo('bankdetails')" data-page="bankdetails">Bank Details</a></li>
+                    <li><a href="#" onclick="navigateTo('income')" data-page="income">Income Details</a></li>
+                    <li><a href="#" onclick="navigateTo('expense')" data-page="expense">Expense Details</a></li>
+                    <li><a href="#" onclick="navigateTo('assets')" data-page="assets">Asset Details</a></li>
+                    <li><a href="#" onclick="navigateTo('liabilities')" data-page="liabilities">Liabilities</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#" onclick="toggleSubmenu('goalsMenu')" class="submenu-toggle">Goals & Investments</a>
+                <ul class="submenu" id="goalsMenu">
+                    <li><a href="#" onclick="navigateTo('goals')" data-page="goals">Goals Management</a></li>
+                    <li><a href="#" onclick="navigateTo('investments')" data-page="investments">Investments Management</a></li>
+                    <li><a href="#" onclick="navigateTo('goal-investment-mapping')" data-page="goal-investment-mapping">Goal-Investment Mapping</a></li>
+                    <li><a href="#" onclick="navigateTo('siptracking')" data-page="siptracking">SIP Tracking</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#" onclick="toggleSubmenu('taxationMenu')" class="submenu-toggle">Taxation</a>
+                <ul class="submenu" id="taxationMenu">
+                    <li><a href="#" onclick="navigateTo('taxforecasting')" data-page="taxforecasting">Tax Forecasting</a></li>
+                    <li><a href="#" onclick="navigateTo('taxcalculation')" data-page="taxcalculation">Tax Calculation</a></li>
+                    <li><a href="#" onclick="navigateTo('advancetax')" data-page="advancetax">Advance Tax Planning</a></li>
+                    <li><a href="#" onclick="navigateTo('savetax')" data-page="savetax">Save Tax</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#" onclick="toggleSubmenu('riskMenu')" class="submenu-toggle">Risk & Recommendations</a>
+                <ul class="submenu" id="riskMenu">
+                    <li><a href="#" onclick="navigateTo('riskprofile')" data-page="riskprofile">Risk Profile</a></li>
+                    <li><a href="#" onclick="navigateTo('recommendations')" data-page="recommendations">Recommendations</a></li>
+                    <li><a href="#" onclick="navigateTo('warnings')" data-page="warnings">Investment Warnings</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#" onclick="toggleSubmenu('reportingMenu')" class="submenu-toggle">Reports & Analytics</a>
+                <ul class="submenu" id="reportingMenu">
+                    <li><a href="#" onclick="navigateTo('reports')" data-page="reports">Financial Reports</a></li>
+                    <li><a href="#" onclick="navigateTo('ltcgoptimizer')" data-page="ltcgoptimizer">LTCG Optimizer</a></li>
+                    <li><a href="#" onclick="navigateTo('creditscore')" data-page="creditscore">Credit Score</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#" onclick="toggleSubmenu('advancedMenu')" class="submenu-toggle">Advanced Tools</a>
+                <ul class="submenu" id="advancedMenu">
+                    <li><a href="#" onclick="navigateTo('scenariosimulator')" data-page="scenariosimulator">Scenario Simulator</a></li>
+                    <li><a href="#" onclick="navigateTo('aiadvisor')" data-page="aiadvisor">AI Advisor</a></li>
+                    <li><a href="#" onclick="navigateTo('alerts')" data-page="alerts">Alerts System</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="content-wrapper" id="contentWrapper">
+        <!-- Dashboard Section -->
+        <div class="page-section active" id="dashboard-section">
+            <div class="container">
+                <!-- Entity Breadcrumb -->
+                <div class="entity-breadcrumb" id="entityBreadcrumb" style="display: none;">
+                    <span class="breadcrumb-label">Viewing:</span>
+                    <span class="breadcrumb-entity-name" id="breadcrumbEntityName"></span>
+                    <span class="breadcrumb-entity-type" id="breadcrumbEntityType"></span>
+                </div>
+
+                <div class="summary-grid">
+                    <div class="card">
+                        <h3>Current Assets</h3>
+                        <div class="value asset">₹ 1,25,00,000</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Current Liabilities</h3>
+                        <div class="value liability">₹ 35,00,000</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Active Financial Goals</h3>
+                        <div class="value goal">6 Goals</div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Total Net Worth (Today)</h3>
+                        <div class="value networth">₹ 90,00,000</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Quick Financial Overview</div>
+
+                <div class="info-grid">
+                    <div class="widget-card">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Investment Allocation</h3>
+                            <span class="widget-icon">📊</span>
+                        </div>
+                        <div class="widget-content">
+                            <div class="widget-item">
+                                <span class="widget-label">Equity</span>
+                                <span class="widget-value">55%</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Debt</span>
+                                <span class="widget-value">25%</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Real Estate</span>
+                                <span class="widget-value">15%</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Gold & Others</span>
+                                <span class="widget-value">5%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-card accent-warning">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Retirement Readiness</h3>
+                            <span class="widget-icon">🎯</span>
+                        </div>
+                        <div class="widget-content">
+                            <div class="widget-item">
+                                <span class="widget-label">Target Corpus</span>
+                                <span class="widget-value warning">₹ 12 Cr</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Projected Corpus</span>
+                                <span class="widget-value">₹ 9.2 Cr</span>
+                            </div>
+                            <div style="margin-top: 4px;">
+                                <span class="widget-status gap">⚠️ Gap Identified</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-card accent-success">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Monthly Cash Flow</h3>
+                            <span class="widget-icon">💰</span>
+                        </div>
+                        <div class="widget-content">
+                            <div class="widget-item">
+                                <span class="widget-label">Income</span>
+                                <span class="widget-value success">₹ 5,80,000</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Expenses</span>
+                                <span class="widget-value danger">₹ 2,10,000</span>
+                            </div>
+                            <div class="widget-item" style="border-bottom: none; padding-top: 12px; margin-top: 12px; border-top: 1px solid #f1f5f9;">
+                                <span class="widget-label" style="font-weight: 700;">Surplus</span>
+                                <span class="widget-value success">₹ 3,70,000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget-card">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Tax Overview (FY 2025-26)</h3>
+                            <span class="widget-icon">📋</span>
+                        </div>
+                        <div class="widget-content">
+                            <div class="widget-item">
+                                <span class="widget-label">Forecasted Tax</span>
+                                <span class="widget-value">₹ 8,50,000</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Advance Tax Paid</span>
+                                <span class="widget-value success">₹ 6,00,000</span>
+                            </div>
+                            <div class="widget-item">
+                                <span class="widget-label">Tax via Salary</span>
+                                <span class="widget-value">₹ 1,50,000</span>
+                            </div>
+                            <div class="widget-item" style="border-bottom: none; padding-top: 12px; margin-top: 12px; border-top: 1px solid #f1f5f9;">
+                                <span class="widget-label" style="font-weight: 700;">Balance/Refund</span>
+                                <span class="widget-value success">₹ -50,000 ↻</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Income Details Section -->
+        <div class="page-section" id="income-section">
+            <iframe id="incomeFrame" src="finances/income-details.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Expense Details Section -->
+        <div class="page-section" id="expense-section">
+            <iframe id="expenseFrame" src="finances/expense-details.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Asset Details Section -->
+        <div class="page-section" id="assets-section">
+            <iframe id="assetFrame" src="finances/asset-details.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Liabilities Section -->
+        <div class="page-section" id="liabilities-section">
+            <iframe id="liabilitiesFrame" src="finances/liabilities.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Bank Details Section -->
+        <div class="page-section" id="bankdetails-section">
+            <iframe id="bankFrame" src="finances/bank-details.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Goals Section -->
+        <div class="page-section" id="goals-section">
+            <iframe id="goalsFrame" src="goals-investments/goals.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Investments Section -->
+        <div class="page-section" id="investments-section">
+            <iframe id="investmentsFrame" src="goals-investments/investments.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Goal-Investment Mapping Section -->
+        <div class="page-section" id="goal-investment-mapping-section">
+            <iframe id="goalInvestmentMappingFrame" src="goals-investments/goal-investment-mapping.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Tax Forecasting Section -->
+        <div class="page-section" id="taxforecasting-section">
+            <iframe id="taxforecastingFrame" src="taxation/tax-forecasting.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Tax Calculation Section -->
+        <div class="page-section" id="taxcalculation-section">
+            <iframe id="taxcalculationFrame" src="taxation/tax-calculation.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Advance Tax Planning Section -->
+        <div class="page-section" id="advancetax-section">
+            <iframe id="advancetaxFrame" src="taxation/advance-tax-planning.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Save Tax Section -->
+        <div class="page-section" id="savetax-section">
+            <iframe id="savetaxFrame" src="taxation/save-tax.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Entity & Family Management Section -->
+        <div class="page-section" id="entity-family-section">
+            <iframe id="entityFamilyFrame" src="entity/entity-family-management.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+
+
+        <!-- SIP Tracking Section -->
+        <div class="page-section" id="siptracking-section">
+            <iframe id="siptrackinFrame" src="goals-investments/sip-tracking.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+
+
+        <!-- Risk Profile Section -->
+        <div class="page-section" id="riskprofile-section">
+            <iframe id="riskprofileFrame" src="risk-recommendations/risk-profile.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Recommendations Section -->
+        <div class="page-section" id="recommendations-section">
+            <iframe id="recommendationsFrame" src="risk-recommendations/recommendations.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Investment Warnings Section -->
+        <div class="page-section" id="warnings-section">
+            <iframe id="warningsFrame" src="risk-recommendations/investment-warnings.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Reports Section -->
+        <div class="page-section" id="reports-section">
+            <iframe id="reportsFrame" src="reports/reports.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- LTCG Optimizer Section -->
+        <div class="page-section" id="ltcgoptimizer-section">
+            <iframe id="ltcgoptimizerFrame" src="reports/ltcg-optimizer.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Credit Score Section -->
+        <div class="page-section" id="creditscore-section">
+            <iframe id="creditscoreFrame" src="reports/credit-score.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Scenario Simulator Section -->
+        <div class="page-section" id="scenariosimulator-section">
+            <iframe id="scenariosimulatorFrame" src="scenario-simulator/scenario-simulator.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- AI Advisor Section -->
+        <div class="page-section" id="aiadvisor-section">
+            <iframe id="aiadvisorFrame" src="scenario-simulator/ai-advisor.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+        <!-- Alerts System Section -->
+        <div class="page-section" id="alerts-section">
+            <iframe id="alertsFrame" src="scenario-simulator/alerts-system.html" style="width: 100%; height: 100vh; border: none;"></iframe>
+        </div>
+
+<footer>
+    © 2026 FinCent — Your Personal Financial CFO
+</footer>
+
+<script src="../js/home.js"></script>
+<script src="../js/common.js"></script>
+
+</body>
+</html>

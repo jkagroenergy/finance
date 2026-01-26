@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FinCent — Master Your Money</title>
+
+    <style>
+        :root{
+            /* Revised purple color scheme (kept from the revised page) */
+            --brand-purple-1: #5b3bd6; /* deep */
+            --brand-purple-2: #7b5cf2; /* mid */
+            --brand-purple-3: #8b6ff8; /* light */
+            --accent-green: #1fc08b;
+
+            /* Semantic aliases used by the earlier layout */
+            --primary: var(--brand-purple-2);
+            --primary-light: var(--brand-purple-3);
+            --primary-dark: var(--brand-purple-1);
+            --secondary: #0f172a; /* dark text */
+            --muted: #64748b;
+            --success: #10b981;
+
+            --white: #ffffff;
+            --card-bg: rgba(255,255,255,0.96);
+            --radius: 18px;
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:var(--secondary)}
+        body{background: linear-gradient(180deg,#f6f7fb 0%, #eef6ff 100%);-webkit-font-smoothing:antialiased;}
+
+        /* Header */
+        header{
+            background: linear-gradient(90deg,var(--brand-purple-1),var(--brand-purple-2));
+            color:var(--white);
+            padding:20px 36px;
+            display:flex;align-items:center;justify-content:space-between;
+            border-bottom-left-radius:12px;border-bottom-right-radius:12px;
+            box-shadow:0 6px 24px rgba(91,59,214,0.12);
+            position:sticky;top:0;z-index:1000
+        }
+
+        .logo{font-weight:800;font-size:20px;letter-spacing:-0.4px}
+        .nav-buttons{display:flex;gap:12px;align-items:center}
+
+        .btn{border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;text-decoration:none;border:2px solid transparent}
+        .btn-login{background:transparent;color:var(--white);border-color:rgba(255,255,255,0.18)}
+        .btn-login:hover{background:rgba(255,255,255,0.06)}
+        .btn-register{background:var(--accent-green);color:var(--white);box-shadow:0 8px 30px rgba(31,192,139,0.18)}
+
+        /* Main content (earlier layout) */
+        .main-content{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;padding:60px 40px;max-width:1200px;margin:0 auto;width:100%}
+
+        .hero-left{display:flex;flex-direction:column;gap:24px}
+        .hero-left h1{font-size:48px;font-weight:800;line-height:1.1;color:var(--secondary);background:linear-gradient(135deg,var(--primary),var(--primary-dark));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+        .hero-left p{font-size:18px;color:var(--muted);line-height:1.6;max-width:560px}
+
+        .features-list{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+        .feature-item{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--muted)}
+        .feature-item::before{content:'✓';color:var(--success);font-weight:700;font-size:16px;flex-shrink:0}
+
+        .cta-buttons{display:flex;gap:16px;margin-top:12px}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);padding:14px 36px;font-size:16px;border-radius:12px;box-shadow:0 6px 20px rgba(91,59,214,0.15);text-decoration:none}
+        .btn-primary:hover{transform:translateY(-3px)}
+        .btn-secondary{background:var(--white);color:var(--primary);padding:14px 36px;font-size:16px;border-radius:12px;border:2px solid var(--primary);text-decoration:none}
+
+        /* Hero right mockup */
+        .hero-right{position:relative;height:520px;display:flex;align-items:center;justify-content:center}
+        .hero-image-container{position:relative;width:100%;height:100%;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(91,59,214,0.12);background:linear-gradient(135deg,#f7f8ff 0%,#eef6ff 100%);display:flex;align-items:center;justify-content:center}
+        .dashboard-mockup{width:92%;height:90%;background:var(--white);border-radius:16px;overflow:hidden;box-shadow:inset 0 2px 8px rgba(0,0,0,0.06);display:flex;flex-direction:column}
+        .mockup-header{background:linear-gradient(135deg,var(--primary),var(--primary-light));height:52px;display:flex;align-items:center;padding:0 16px;gap:12px;color:var(--white);font-weight:600;font-size:14px}
+        .mockup-content{flex:1;padding:20px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;align-content:start}
+        .mockup-card{background:linear-gradient(135deg,#f0f9ff 0%,#e6f2ff 100%);padding:12px;border-radius:8px;height:60px;display:flex;flex-direction:column;justify-content:center;gap:4px;border-left:4px solid var(--primary)}
+        .mockup-card-label{font-size:11px;color:var(--muted);font-weight:600}
+        .mockup-card-value{font-size:16px;font-weight:700;color:var(--primary-dark)}
+
+        /* Info/footer */
+        footer{max-width:1200px;margin:32px auto 60px;padding:0 20px;color:var(--muted);font-size:14px;text-align:center}
+
+        /* Modals and forms (kept from earlier content) */
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;justify-content:center;align-items:center}
+        .modal.active{display:flex}
+        .modal-content{background:var(--white);padding:32px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.25);width:100%;max-width:460px;position:relative}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+        .modal-header h2{font-size:20px}
+        .modal-close{background:none;border:none;font-size:24px;cursor:pointer}
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;font-size:14px;font-weight:600;margin-bottom:8px;color:var(--secondary)}
+        .form-group input{width:100%;padding:12px 14px;border:2px solid #e6edf8;border-radius:8px;font-size:14px}
+        .error-message{font-size:12px;color:#ef4444;margin-top:6px;display:none}
+        .error-message.show{display:block}
+        .btn-submit{width:100%;padding:12px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:var(--white);border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer}
+
+        /* Responsive */
+        @media(max-width:1024px){.main-content{grid-template-columns:1fr;gap:40px;padding:40px 30px}.hero-left h1{font-size:40px}.hero-right{height:420px}header{padding:16px 30px}}
+        @media(max-width:768px){.cta-buttons{flex-direction:column}.btn{width:100%}.hero-left h1{font-size:32px}.hero-right{height:300px}.modal-content{margin:20px;max-width:calc(100% - 40px)}}
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">💼 FinCent</div>
+    <div class="nav-buttons">
+        <button class="btn btn-login" onclick="openLoginModal()">Login</button>
+        <button class="btn btn-register" onclick="openRegisterModal()">Sign Up Free</button>
+    </div>
+</header>
+
+<main class="main-content">
+    <div class="hero-left">
+        <h1>Your Personal Financial CFO</h1>
+        <p>Take complete control of your finances with FinCent. Track assets, plan taxes, manage investments, and achieve your financial goals all in one intelligent dashboard.</p>
+
+        <ul class="features-list">
+            <li class="feature-item">Comprehensive financial tracking</li>
+            <li class="feature-item">Intelligent tax planning & forecasting</li>
+            <li class="feature-item">Goal-based investment management</li>
+            <li class="feature-item">Real-time insights & analytics</li>
+        </ul>
+
+        <div class="cta-buttons">
+            <a href="pages/home.html" class="btn btn-primary">Get Started Free</a>
+            <button class="btn btn-secondary" onclick="scrollToInfo()">Learn More</button>
+        </div>
+    </div>
+
+    <div class="hero-right">
+        <div class="hero-image-container">
+            <div class="dashboard-mockup">
+                <div class="mockup-header">📊 Dashboard • FinCent</div>
+                <div class="mockup-content">
+                    <div class="mockup-card">
+                        <div class="mockup-card-label">Net Worth</div>
+                        <div class="mockup-card-value">₹ 90L</div>
+                    </div>
+                    <div class="mockup-card">
+                        <div class="mockup-card-label">Total Assets</div>
+                        <div class="mockup-card-value">₹ 1.25Cr</div>
+                    </div>
+                    <div class="mockup-card">
+                        <div class="mockup-card-label">Tax Forecast</div>
+                        <div class="mockup-card-value">₹ 8.5L</div>
+                    </div>
+                    <div class="mockup-card">
+                        <div class="mockup-card-label">Investments</div>
+                        <div class="mockup-card-value">₹ 35L</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 FinCent — Your Personal Financial CFO. All rights reserved.</p>
+</footer>
+
+<!-- Registration Modal -->
+<div class="modal" id="registerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create Account</h2>
+            <button class="modal-close" onclick="closeRegisterModal()">&times;</button>
+        </div>
+        <form onsubmit="handleRegister(event)">
+            <div class="form-group">
+                <label for="regEmail">Email Address</label>
+                <input type="email" id="regEmail" placeholder="you@example.com" required>
+                <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="regName">Full Name</label>
+                <input type="text" id="regName" placeholder="John Doe" required>
+                <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="regPhone">Phone Number</label>
+                <input type="tel" id="regPhone" placeholder="9876543210" required>
+                <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <input type="password" id="regPassword" placeholder="At least 8 characters" required>
+                <div class="error-message"></div>
+            </div>
+            <button type="submit" class="btn-submit">Create Account</button>
+            <div style="text-align:center;margin-top:12px;font-size:14px;color:var(--muted)">Already have an account? <a style="color:var(--primary);cursor:pointer" onclick="switchToLogin()">Login here</a></div>
+        </form>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Login</h2>
+            <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+        </div>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="loginEmail">Username</label>
+                <input type="text" id="loginEmail" placeholder="Enter your username" required>
+                <div class="error-message"></div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                <div class="error-message"></div>
+            </div>
+            <button type="submit" class="btn-submit">Login to Account</button>
+            <div style="text-align:center;margin-top:12px;font-size:14px;color:var(--muted)">Don't have an account? <a style="color:var(--primary);cursor:pointer" onclick="switchToRegister()">Sign up here</a></div>
+        </form>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal" id="forgotModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Reset Password</h2>
+            <button class="modal-close" onclick="closeForgotModal()">&times;</button>
+        </div>
+        <form onsubmit="handleForgotPassword(event)">
+            <div class="form-group">
+                <label for="resetEmail">Email Address</label>
+                <input type="email" id="resetEmail" placeholder="you@example.com" required>
+                <div class="error-message"></div>
+            </div>
+            <button type="submit" class="btn-submit">Send Reset Link</button>
+            <div style="text-align:center;margin-top:12px;font-size:14px;color:var(--muted)"><a style="color:var(--primary);cursor:pointer" onclick="backToLogin()">Back to Login</a></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Modal Management
+    function openRegisterModal() { document.getElementById('registerModal').classList.add('active'); }
+    function closeRegisterModal() { document.getElementById('registerModal').classList.remove('active'); clearForm('registerModal'); }
+    function openLoginModal() { document.getElementById('loginModal').classList.add('active'); }
+    function closeLoginModal() { document.getElementById('loginModal').classList.remove('active'); clearForm('loginModal'); }
+    function closeForgotModal() { document.getElementById('forgotModal').classList.remove('active'); }
+    function switchToLogin(){ closeRegisterModal(); openLoginModal(); }
+    function switchToRegister(){ closeLoginModal(); openRegisterModal(); }
+    function showForgotPassword(){ closeLoginModal(); document.getElementById('forgotModal').classList.add('active'); }
+    function backToLogin(){ closeForgotModal(); openLoginModal(); }
+
+    function clearForm(modalId){
+        const modal = document.getElementById(modalId);
+        if(!modal) return;
+        const inputs = modal.querySelectorAll('input');
+        inputs.forEach(input => { input.value = ''; input.classList.remove('error'); });
+        const errors = modal.querySelectorAll('.error-message');
+        errors.forEach(error => error.classList.remove('show'));
+    }
+
+    // Validation
+    function validateEmail(email){ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; return emailRegex.test(email); }
+    function validatePhone(phone){ const phoneRegex = /^[0-9]{10}$/; return phoneRegex.test(phone); }
+    function validatePassword(password){ return password.length >= 8; }
+
+    // Handlers
+    function handleRegister(e){
+        e.preventDefault();
+        const email = document.getElementById('regEmail').value.trim();
+        const name = document.getElementById('regName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const password = document.getElementById('regPassword').value;
+        let isValid = true;
+        if(!validateEmail(email)){ showError('regEmail','Please enter a valid email'); isValid=false; }
+        if(!validatePhone(phone)){ showError('regPhone','Phone must be 10 digits'); isValid=false; }
+        if(!validatePassword(password)){ showError('regPassword','Password must be at least 8 characters'); isValid=false; }
+        if(isValid){
+            localStorage.setItem('fincentUser', JSON.stringify({ email,name,phone,password,registeredAt:new Date().toISOString() }));
+            alert('Account created successfully! You can now login.');
+            closeRegisterModal();
+            switchToLogin();
+        }
+    }
+
+    function handleLogin(e){ e.preventDefault(); /* simplified: redirect to dashboard */ window.location.href='pages/home.html'; }
+
+    function handleForgotPassword(e){ e.preventDefault(); const email = document.getElementById('resetEmail').value.trim(); if(!validateEmail(email)){ showError('resetEmail','Please enter a valid email'); return; } alert('Password reset link sent to your email!'); closeForgotModal(); }
+
+    function showError(inputId,message){ const input=document.getElementById(inputId); if(!input) return; const errorDiv = input.nextElementSibling; input.classList.add('error'); if(errorDiv){ errorDiv.textContent = message; errorDiv.classList.add('show'); } }
+
+    // Close modal on Escape
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeRegisterModal(); closeLoginModal(); closeForgotModal(); } });
+
+    // Close modal on background click
+    document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', function(e){ if(e.target === this) this.classList.remove('active'); }); });
+
+    function scrollToInfo(){ window.scrollTo({top:document.body.scrollHeight/3,behavior:'smooth'}); }
+</script>
+
+</body>
+</html>
