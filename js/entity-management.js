@@ -87,9 +87,6 @@ function renderEntities() {
             <div class="entity-name">${entity.name}</div>
             <div class="entity-type">${getEntityTypeLabel(entity.type)}</div>
             <div class="entity-info" style="margin-bottom: 12px;">
-                PAN: ${entity.pan || 'Not Set'}<br>
-                Tax: ${entity.taxRegime === 'new' ? 'New Regime' : 'Old Regime'}<br>
-                Net Worth: ${formatCurrency(entity.netWorth || 0)}<br>
                 <strong>Mapped Members: ${memberCount}</strong>
             </div>
             <div class="entity-actions">
@@ -111,9 +108,6 @@ function openAddEntityModal() {
     document.getElementById('entityModalTitle').textContent = 'Add New Entity';
     document.getElementById('entityName').value = '';
     document.getElementById('entityType').value = '';
-    document.getElementById('entityPan').value = '';
-    document.getElementById('entityTaxRegime').value = 'new';
-    document.querySelectorAll('#entityModal input[type="checkbox"]').forEach(cb => cb.checked = false);
     openModal('entityModal');
 }
 
@@ -125,13 +119,6 @@ function editEntity(entityId) {
     document.getElementById('entityModalTitle').textContent = 'Edit Entity';
     document.getElementById('entityName').value = entity.name;
     document.getElementById('entityType').value = entity.type;
-    document.getElementById('entityPan').value = entity.pan || '';
-    document.getElementById('entityTaxRegime').value = entity.taxRegime || 'new';
-
-    document.querySelectorAll('#entityModal input[type="checkbox"]').forEach(cb => {
-        cb.checked = entity.properties && entity.properties.includes(cb.value);
-    });
-
     openModal('entityModal');
 }
 
@@ -145,17 +132,9 @@ function handleEntitySubmit(e) {
 
     const name = document.getElementById('entityName').value.trim();
     const type = document.getElementById('entityType').value;
-    const pan = document.getElementById('entityPan').value.trim();
-    const taxRegime = document.getElementById('entityTaxRegime').value;
-    const properties = Array.from(document.querySelectorAll('#entityModal input[type="checkbox"]:checked')).map(cb => cb.value);
 
     if (!name || !type) {
         showNotification('Please fill all required fields', 'error');
-        return;
-    }
-
-    if (pan && !validatePAN(pan)) {
-        showNotification('Invalid PAN format', 'error');
         return;
     }
 
@@ -164,18 +143,12 @@ function handleEntitySubmit(e) {
         if (entity) {
             entity.name = name;
             entity.type = type;
-            entity.pan = pan;
-            entity.taxRegime = taxRegime;
-            entity.properties = properties;
         }
     } else {
         entities.push({
             id: generateId(),
             name,
             type,
-            pan,
-            taxRegime,
-            properties,
             netWorth: 0,
             createdAt: new Date().toISOString()
         });
