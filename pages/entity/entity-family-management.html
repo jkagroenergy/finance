@@ -88,44 +88,10 @@
                     <select id="entityType" required onchange="updateEntityTypeInfo()">
                         <option value="">Select Type</option>
                         <option value="individual">Individual</option>
-                        <option value="spouse">Spouse</option>
                         <option value="family">Family (Combined)</option>
                         <option value="huf">HUF (Hindu Undivided Family)</option>
-                        <option value="joint">Joint Account</option>
                         <option value="business">Business</option>
                     </select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="entityPan">PAN</label>
-                    <input type="text" id="entityPan" placeholder="e.g., ABCDE1234F" maxlength="10">
-                </div>
-                <div class="form-group">
-                    <label for="entityTaxRegime">Tax Regime</label>
-                    <select id="entityTaxRegime">
-                        <option value="new">New Tax Regime (Default)</option>
-                        <option value="old">Old Tax Regime</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Financial Properties</label>
-                <div class="checkbox-group">
-                    <label class="checkbox-item">
-                        <input type="checkbox" value="investments"> Investments
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" value="savings"> Savings
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" value="business"> Business
-                    </label>
-                    <label class="checkbox-item">
-                        <input type="checkbox" value="rental"> Rental Income
-                    </label>
                 </div>
             </div>
 
@@ -169,12 +135,12 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="memberDOB">Date of Birth</label>
-                    <input type="date" id="memberDOB">
+                    <label for="memberDOB">Date of Birth *</label>
+                    <input type="date" id="memberDOB" required>
                 </div>
                 <div class="form-group">
-                    <label for="memberGender">Gender</label>
-                    <select id="memberGender">
+                    <label for="memberGender">Gender *</label>
+                    <select id="memberGender" required>
                         <option value="">-- Select --</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -185,8 +151,8 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="memberPAN">PAN Number</label>
-                    <input type="text" id="memberPAN" placeholder="ABCDE1234F" maxlength="10">
+                    <label for="memberPAN">PAN Number *</label>
+                    <input type="text" id="memberPAN" placeholder="ABCDE1234F" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label for="memberAadhaar">Aadhaar Number</label>
@@ -201,10 +167,6 @@
                 </label>
             </div>
 
-            <div class="form-group">
-                <label for="memberNotes">Notes</label>
-                <textarea id="memberNotes" placeholder="Add any additional notes"></textarea>
-            </div>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Save Member</button>
