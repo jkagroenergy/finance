@@ -13,28 +13,14 @@ function init() {
     updateFamilySummary();
     renderEntities();
     displayMembers();
-    displayMappings();
+    // mappings UI removed from markup — only display if container exists
+    if (document.getElementById('mappingsContainer')) displayMappings();
 }
 
 function loadAllData() {
     entities = loadFromLocalStorage('fincentEntities', []);
     familyMembers = loadFromLocalStorage('familyMembers', []);
     entityMappings = loadFromLocalStorage('entityMappings', []);
-
-    if (entities.length === 0) {
-        const defaultEntity = {
-            id: generateId(),
-            name: 'My Account',
-            type: 'individual',
-            pan: '',
-            taxRegime: 'new',
-            netWorth: 0,
-            properties: [],
-            createdAt: new Date().toISOString()
-        };
-        entities.push(defaultEntity);
-        saveAllData();
-    }
 }
 
 function saveAllData() {
@@ -48,8 +34,9 @@ function updateEntitySummary() {
     const stats = {
         total: entities.length,
         individual: entities.filter(e => e.type === 'individual').length,
-        familyTypes: entities.filter(e => ['spouse', 'family', 'huf'].includes(e.type)).length,
-        combined: entities.reduce((sum, e) => sum + (e.netWorth || 0), 0)
+        family: entities.filter(e => e.type === 'family').length,
+        huf: entities.filter(e => e.type === 'huf').length,
+        business: entities.filter(e => e.type === 'business').length
     };
 
     document.getElementById('entitySummaryStats').innerHTML = `
@@ -63,11 +50,15 @@ function updateEntitySummary() {
         </div>
         <div class="stat-card">
             <h4>Family/Combined</h4>
-            <div class="value">${stats.familyTypes}</div>
+            <div class="value">${stats.family}</div>
         </div>
         <div class="stat-card">
-            <h4>Combined Net Worth</h4>
-            <div class="value">${formatCurrency(stats.combined)}</div>
+            <h4>HUF</h4>
+            <div class="value">${stats.huf}</div>
+        </div>
+        <div class="stat-card">
+            <h4>Business</h4>
+            <div class="value">${stats.business}</div>
         </div>
     `;
 }
@@ -76,27 +67,51 @@ function renderEntities() {
     const grid = document.getElementById('entitiesGrid');
     grid.innerHTML = '';
 
-    entities.forEach(entity => {
-        const mappedMembers = entityMappings.filter(m => m.entityId === entity.id);
-        const memberCount = mappedMembers.length;
+    // Render as table for better readability
+    const mappingRows = entities.map(entity => {
+        const mapping = entityMappings.find(m => m.entityId === entity.id);
+        const memberCount = mapping && mapping.memberIds ? mapping.memberIds.length : 0;
 
-        const card = document.createElement('div');
-        card.className = 'entity-card';
-        card.innerHTML = `
-            <div class="entity-icon">${getEntityIcon(entity.type)}</div>
-            <div class="entity-name">${entity.name}</div>
-            <div class="entity-type">${getEntityTypeLabel(entity.type)}</div>
-            <div class="entity-info" style="margin-bottom: 12px;">
-                <strong>Mapped Members: ${memberCount}</strong>
-            </div>
-            <div class="entity-actions">
-                <button class="btn btn-primary btn-small" onclick="editEntity('${entity.id}')">Edit</button>
-                <button class="btn btn-secondary btn-small" onclick="mapMembersToEntity('${entity.id}')">Map Members</button>
-                <button class="btn btn-danger btn-small" onclick="deleteEntity('${entity.id}')">Delete</button>
-            </div>
+        // Render Map Members button; disable for individual entities
+        const mapBtn = entity.type === 'individual'
+            ? `<button class="btn btn-secondary btn-small" disabled title="Mapping not allowed for Individual">Map Members</button>`
+            : `<button class="btn btn-secondary btn-small" onclick="mapMembersToEntity('${entity.id}')">Map Members</button>`;
+
+        return `
+            <tr>
+                <td><div style="display:flex; align-items:center; gap:10px;"><span>${getEntityIcon(entity.type)}</span><strong>${entity.name}</strong></div></td>
+                <td>${getEntityTypeLabel(entity.type)}</td>
+                <td>${memberCount}</td>
+                <td>${entity.pan ? entity.pan : '-'}</td>
+                <td>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-primary btn-small" onclick="editEntity('${entity.id}')">Edit</button>
+                        ${mapBtn}
+                        <button class="btn btn-danger btn-small" onclick="deleteEntity('${entity.id}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
         `;
-        grid.appendChild(card);
-    });
+    }).join('');
+
+    grid.innerHTML = `
+        <div class="entities-table-wrapper">
+            <table class="entities-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Members</th>
+                        <th>PAN</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${mappingRows}
+                </tbody>
+            </table>
+        </div>
+    `;
 
     if (entities.length === 0) {
         grid.innerHTML = '<div class="empty-state"><p>No entities created yet.</p></div>';
@@ -108,6 +123,8 @@ function openAddEntityModal() {
     document.getElementById('entityModalTitle').textContent = 'Add New Entity';
     document.getElementById('entityName').value = '';
     document.getElementById('entityType').value = '';
+    document.getElementById('entityPAN').value = '';
+    renderEntityMembersCheckbox([]);
     openModal('entityModal');
 }
 
@@ -119,6 +136,11 @@ function editEntity(entityId) {
     document.getElementById('entityModalTitle').textContent = 'Edit Entity';
     document.getElementById('entityName').value = entity.name;
     document.getElementById('entityType').value = entity.type;
+    document.getElementById('entityPAN').value = entity.pan || '';
+
+    const existingMapping = entityMappings.find(m => m.entityId === entityId);
+    const mappedMemberIds = existingMapping ? existingMapping.memberIds : [];
+    renderEntityMembersCheckbox(mappedMemberIds);
     openModal('entityModal');
 }
 
@@ -132,24 +154,44 @@ function handleEntitySubmit(e) {
 
     const name = document.getElementById('entityName').value.trim();
     const type = document.getElementById('entityType').value;
+    const pan = (document.getElementById('entityPAN') && document.getElementById('entityPAN').value.trim()) || '';
+    const selectedCheckboxes = document.querySelectorAll('#entityMembersList input[type="checkbox"]:checked');
+    const memberIds = Array.from(selectedCheckboxes).map(cb => cb.value);
 
     if (!name || !type) {
         showNotification('Please fill all required fields', 'error');
         return;
     }
 
+    let entityId;
     if (editingEntityId) {
         const entity = entities.find(e => e.id === editingEntityId);
         if (entity) {
             entity.name = name;
             entity.type = type;
+            entity.pan = pan;
+            entityId = entity.id;
         }
     } else {
-        entities.push({
+        const newEntity = {
             id: generateId(),
             name,
             type,
+            pan,
             netWorth: 0,
+            createdAt: new Date().toISOString()
+        };
+        entities.push(newEntity);
+        entityId = newEntity.id;
+    }
+
+    // Update mapping for this entity
+    entityMappings = entityMappings.filter(m => m.entityId !== entityId);
+    if (memberIds && memberIds.length > 0) {
+        entityMappings.push({
+            id: generateId(),
+            entityId,
+            memberIds,
             createdAt: new Date().toISOString()
         });
     }
@@ -171,6 +213,28 @@ function deleteEntity(entityId) {
     renderEntities();
     displayMappings();
     showNotification('Entity deleted successfully!', 'success');
+}
+
+function renderEntityMembersCheckbox(selectedMemberIds = []) {
+    const container = document.getElementById('entityMembersList');
+
+    if (!container) return;
+
+    if (familyMembers.length === 0) {
+        container.innerHTML = '<p class="no-members-text">No family members available. Please add family members first.</p>';
+        return;
+    }
+
+    container.innerHTML = familyMembers.map(member => `
+        <label class="member-checkbox-item">
+            <input type="checkbox" value="${member.id}" ${selectedMemberIds.includes(member.id) ? 'checked' : ''}>
+            <div class="member-checkbox-info">
+                <div class="member-checkbox-name">${member.name}</div>
+                <div class="member-checkbox-relation">${member.relationship} ${member.dob ? '• Age: ' + calculateAge(member.dob) : ''}</div>
+            </div>
+            ${member.pan ? '<span style="font-size: 11px; color: #64748b;">PAN: ' + member.pan + '</span>' : ''}
+        </label>
+    `).join('');
 }
 
 function updateEntityTypeInfo() {
@@ -197,10 +261,6 @@ function updateFamilySummary() {
             <div class="value">${stats.withPAN}</div>
         </div>
         <div class="stat-card">
-            <h4>HUF Members</h4>
-            <div class="value">${stats.huf}</div>
-        </div>
-        <div class="stat-card">
             <h4>Active</h4>
             <div class="value">${stats.active}</div>
         </div>
@@ -220,34 +280,37 @@ function displayMembers() {
         return;
     }
 
-    container.innerHTML = familyMembers.map(member => `
-        <div class="family-card">
-            <div class="family-header">
-                <div class="family-name">${member.name}</div>
-                <span class="status-badge ${member.active === false ? 'inactive' : ''}">
-                    ${member.active === false ? 'Inactive' : 'Active'}
-                </span>
-            </div>
-            <div class="family-info">
-                <div class="info-item">
-                    <div class="info-label">Relationship</div>
-                    <div class="info-value">${member.relationship || '-'}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Age</div>
-                    <div class="info-value">${calculateAge(member.dob)}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">PAN</div>
-                    <div class="info-value">${member.pan || '-'}</div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                <button class="action-btn edit" onclick="editMember('${member.id}')">Edit</button>
-                <button class="action-btn delete" onclick="deleteMember('${member.id}')">Delete</button>
-            </div>
-        </div>
-    `).join('');
+    container.innerHTML = `
+        <table class="members-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Relationship</th>
+                    <th>Age</th>
+                    <th>PAN</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${familyMembers.map(member => `
+                    <tr>
+                        <td><strong>${member.name}</strong></td>
+                        <td>${member.relationship || '-'}</td>
+                        <td>${calculateAge(member.dob)}</td>
+                        <td>${member.pan || '-'}</td>
+                        <td><span class="status-badge ${member.active === false ? 'inactive' : ''}">${member.active === false ? 'Inactive' : 'Active'}</span></td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="action-btn edit" onclick="editMember('${member.id}')">Edit</button>
+                                <button class="action-btn delete" onclick="deleteMember('${member.id}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
 }
 
 function openAddMemberModal() {
@@ -265,7 +328,7 @@ function editMember(memberId) {
     document.getElementById('memberModalTitle').textContent = 'Edit Family Member';
     document.getElementById('memberName').value = member.name;
     document.getElementById('memberRelationship').value = member.relationship || '';
-    document.getElementById('memberDOB').value = member.dob || '';
+    document.getElementById('memberDOB').value = formatISOToDDMMYYYY(member.dob) || '';
     document.getElementById('memberGender').value = member.gender || '';
     document.getElementById('memberPAN').value = member.pan || '';
     document.getElementById('memberAadhaar').value = member.aadhaar || '';
@@ -292,6 +355,15 @@ function handleMemberSubmit(e) {
 
     const pan = document.getElementById('memberPAN').value.trim();
     const aadhaar = document.getElementById('memberAadhaar').value.trim();
+    const dobInput = document.getElementById('memberDOB').value.trim();
+    let dobIso = '';
+    if (dobInput) {
+        dobIso = parseDDMMYYYYToISO(dobInput);
+        if (!dobIso) {
+            showNotification('Invalid Date of Birth. Use dd/mm/yyyy', 'error');
+            return;
+        }
+    }
 
     if (pan && !validatePAN(pan)) {
         showNotification('Invalid PAN format', 'error');
@@ -306,7 +378,7 @@ function handleMemberSubmit(e) {
     const memberData = {
         name,
         relationship,
-        dob: document.getElementById('memberDOB').value,
+        dob: dobIso,
         gender: document.getElementById('memberGender').value,
         pan,
         aadhaar,
@@ -317,18 +389,89 @@ function handleMemberSubmit(e) {
 
     if (editingMemberId) {
         const member = familyMembers.find(m => m.id === editingMemberId);
-        if (member) Object.assign(member, memberData);
+        if (member) {
+            const previousPan = member.pan || '';
+            Object.assign(member, memberData);
+
+            const newPan = memberData.pan || '';
+
+            // Find any mapping that links this member to an individual entity
+            let individualMapping = null;
+            for (let m of entityMappings) {
+                if (m.memberIds && m.memberIds.includes(editingMemberId)) {
+                    const ent = entities.find(e => e.id === m.entityId);
+                    if (ent && ent.type === 'individual') {
+                        individualMapping = { mapping: m, entity: ent };
+                        break;
+                    }
+                }
+            }
+
+            if (newPan && !individualMapping) {
+                // PAN added: create individual entity and mapping
+                const newEntity = {
+                    id: generateId(),
+                    name: memberData.name,
+                    type: 'individual',
+                    pan: newPan,
+                    netWorth: 0,
+                    createdAt: new Date().toISOString()
+                };
+                entities.push(newEntity);
+                entityMappings.push({
+                    id: generateId(),
+                    entityId: newEntity.id,
+                    memberIds: [editingMemberId],
+                    createdAt: new Date().toISOString()
+                });
+            } else if (!newPan && individualMapping) {
+                // PAN removed: remove mapping and entity if unused
+                const entId = individualMapping.mapping.entityId;
+                entityMappings = entityMappings.filter(m => m.id !== individualMapping.mapping.id);
+                const stillUsed = entityMappings.some(m => m.entityId === entId);
+                if (!stillUsed) {
+                    entities = entities.filter(e => e.id !== entId);
+                }
+            } else if (newPan && individualMapping) {
+                // PAN present and mapping exists: update entity details
+                individualMapping.entity.name = memberData.name;
+                individualMapping.entity.pan = newPan;
+            }
+        }
     } else {
+        const newMemberId = generateId();
         familyMembers.push({
-            id: generateId(),
+            id: newMemberId,
             ...memberData
         });
+
+        // If PAN provided, create an individual entity and mapping
+        if (memberData.pan) {
+            const newEntity = {
+                id: generateId(),
+                name: memberData.name,
+                type: 'individual',
+                pan: memberData.pan || '',
+                netWorth: 0,
+                createdAt: new Date().toISOString()
+            };
+            entities.push(newEntity);
+
+            entityMappings.push({
+                id: generateId(),
+                entityId: newEntity.id,
+                memberIds: [newMemberId],
+                createdAt: new Date().toISOString()
+            });
+        }
     }
 
     saveAllData();
     updateFamilySummary();
     displayMembers();
     displayMappings(); // Update mappings display
+    updateEntitySummary();
+    renderEntities();
     closeMemberModal();
     showNotification(editingMemberId ? 'Member updated successfully!' : 'Member created successfully!', 'success');
 }
@@ -355,32 +498,18 @@ function openMappingModal() {
 }
 
 function mapMembersToEntity(entityId) {
-    editingMappingId = null;
-    document.getElementById('mappingModalTitle').textContent = 'Map Family Members to Entity';
-    
-    const select = document.getElementById('mappingEntity');
-    select.value = entityId;
-    
-    const existingMapping = entityMappings.find(m => m.entityId === entityId);
-    const mappedMemberIds = existingMapping ? existingMapping.memberIds : [];
-    
-    renderMembersCheckbox(mappedMemberIds);
-    openModal('mappingModal');
+    // Open the entity edit modal so user can associate members
+    editEntity(entityId);
 }
 
 function populateEntityDropdown() {
-    const select = document.getElementById('mappingEntity');
-    select.innerHTML = '<option value="">-- Select Entity --</option>';
-    entities.forEach(entity => {
-        const option = document.createElement('option');
-        option.value = entity.id;
-        option.textContent = entity.name;
-        select.appendChild(option);
-    });
+    // mapping UI removed - no-op
+    return;
 }
 
 function renderMembersCheckbox(selectedMemberIds = []) {
-    const container = document.getElementById('membersList');
+    const container = document.getElementById('entityMembersList');
+    if (!container) return;
 
     if (familyMembers.length === 0) {
         container.innerHTML = '<p class="no-members-text">No family members available. Please add family members first.</p>';
@@ -400,95 +529,23 @@ function renderMembersCheckbox(selectedMemberIds = []) {
 }
 
 function closeMappingModal() {
-    closeModal('mappingModal');
+    // mapping modal removed
     editingMappingId = null;
 }
 
 function handleMappingSubmit(e) {
-    e.preventDefault();
-
-    const entityId = document.getElementById('mappingEntity').value;
-    const selectedCheckboxes = document.querySelectorAll('#membersList input[type="checkbox"]:checked');
-    const memberIds = Array.from(selectedCheckboxes).map(cb => cb.value);
-
-    if (!entityId) {
-        showNotification('Please select an entity', 'error');
-        return;
-    }
-
-    if (memberIds.length === 0) {
-        showNotification('Please select at least one family member', 'error');
-        return;
-    }
-
-    // Remove existing mapping for this entity
-    entityMappings = entityMappings.filter(m => m.entityId !== entityId);
-
-    // Add new mapping
-    entityMappings.push({
-        id: generateId(),
-        entityId,
-        memberIds,
-        createdAt: new Date().toISOString()
-    });
-
-    saveAllData();
-    renderEntities(); // Update entity card with member count
-    displayMappings();
-    closeMappingModal();
-    showNotification('Entity-Family mapping saved successfully!', 'success');
+    // mapping modal removed - no-op
+    return;
 }
 
 function displayMappings() {
-    const container = document.getElementById('mappingsContainer');
-
-    if (entityMappings.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <p>No entity-family mappings created yet.</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = entityMappings.map(mapping => {
-        const entity = entities.find(e => e.id === mapping.entityId);
-        const members = familyMembers.filter(m => mapping.memberIds.includes(m.id));
-
-        if (!entity) return '';
-
-        return `
-            <div class="family-card">
-                <div class="family-header">
-                    <div class="family-name">${getEntityIcon(entity.type)} ${entity.name}</div>
-                    <div>
-                        <button class="action-btn edit" onclick="mapMembersToEntity('${entity.id}')">Edit</button>
-                        <button class="action-btn delete" onclick="deleteMapping('${mapping.id}')">Delete</button>
-                    </div>
-                </div>
-                <div class="entity-mapping-section">
-                    <div class="entity-mapping-title">Mapped Family Members (${members.length})</div>
-                    <div class="mapped-members">
-                        ${members.length > 0 ? members.map(m => `
-                            <div class="member-tag">
-                                ${m.name} (${m.relationship})
-                            </div>
-                        `).join('') : '<span class="no-members-text">No members mapped</span>'}
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
+    // mappings UI removed - no-op
+    return;
 }
 
 function deleteMapping(mappingId) {
-    if (!confirmDelete('this mapping')) return;
-
-    entityMappings = entityMappings.filter(m => m.id !== mappingId);
-    saveAllData();
-    renderEntities();
-    displayMappings();
-    showNotification('Mapping deleted successfully!', 'success');
+    // mappings UI removed - no-op
+    return;
 }
 
 // ==================== PAN STATUS ====================

@@ -30,6 +30,39 @@ function formatDate(dateString) {
 }
 
 /**
+ * Parse date from dd/mm/yyyy to ISO (yyyy-mm-dd). Returns null if invalid.
+ */
+function parseDDMMYYYYToISO(str) {
+    if (!str) return null;
+    const parts = str.split('/');
+    if (parts.length !== 3) return null;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    if (!day || !month || !year) return null;
+    // Basic range checks
+    if (month < 1 || month > 12) return null;
+    if (day < 1 || day > 31) return null;
+    // Create ISO string
+    const mm = month.toString().padStart(2, '0');
+    const dd = day.toString().padStart(2, '0');
+    return `${year}-${mm}-${dd}`;
+}
+
+/**
+ * Format ISO date (yyyy-mm-dd or full ISO) to dd/mm/yyyy
+ */
+function formatISOToDDMMYYYY(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+/**
  * Generate unique ID
  */
 function generateId() {
