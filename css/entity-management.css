@@ -194,3 +194,216 @@
     font-size: 12px;
     font-weight: 600;
 }
+/* Scrollable members list */
+.members-list-wrapper {
+    max-height: 800px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 0;
+    padding-bottom: 20px;
+}
+
+.members-list-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.members-list-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 8px;
+}
+
+.members-list-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 8px;
+}
+
+/* Make Entity & Family Management page use more horizontal space when appropriate */
+.container--wide {
+    max-width: none;
+    width: 100%;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+/* Reduce extra inner card padding so tables feel wider on this page */
+.container--wide .card,
+.container--wide .entities-table-wrapper {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+@media (max-width: 1024px) {
+    .container--wide {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+}
+
+/* Make stat-cards narrower so five can fit in a single row on wide screens */
+.container--wide .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.container--wide .summary-stats .stat-card {
+    padding: 14px 12px;
+    border-left-width: 3px;
+}
+
+.container--wide .summary-stats .stat-card h4 {
+    font-size: 12px;
+}
+
+.container--wide .summary-stats .stat-card .value {
+    font-size: 18px;
+}
+
+@media (max-width: 1280px) {
+    .container--wide .summary-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.members-list-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Members table styles */
+.members-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.members-table thead {
+    background: #f1f5f9;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.members-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.members-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+}
+
+.members-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.members-table tbody td {
+    padding: 14px 16px;
+    color: #334155;
+    font-size: 14px;
+}
+
+.members-table tbody td strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.members-table .action-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.members-table .action-btn.edit {
+    background-color: #6366f1;
+    color: white;
+}
+
+.members-table .action-btn.edit:hover {
+    background-color: #4f46e5;
+}
+
+.members-table .action-btn.delete {
+    background-color: #ef4444;
+    color: white;
+}
+
+.members-table .action-btn.delete:hover {
+    background-color: #dc2626;
+}
+
+/* Entities table styles */
+.entities-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Ensure table spans full width even when placed inside a grid container */
+.entities-table-wrapper {
+    grid-column: 1 / -1;
+}
+
+.entities-table td:last-child {
+    white-space: nowrap;
+}
+
+.entities-table th:nth-child(1), .entities-table td:nth-child(1) {
+    width: 40%;
+}
+
+.entities-table th:nth-child(3), .entities-table td:nth-child(3) {
+    width: 12%;
+    text-align: center;
+}
+
+.entities-table th:nth-child(4), .entities-table td:nth-child(4) {
+    width: 16%;
+    text-align: left;
+}
+
+.entities-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.entities-table thead {
+    background: #f1f5f9;
+}
+
+.entities-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #475569;
+    font-size: 13px;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.entities-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.entities-table tbody td {
+    padding: 12px 16px;
+    color: #334155;
+    font-size: 14px;
+}
+
+.entities-table .btn-small {
+    padding: 6px 10px;
+    font-size: 12px;
+}

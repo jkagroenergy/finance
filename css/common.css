@@ -112,6 +112,21 @@ h4 {
     opacity: 0.9;
 }
 
+/* Disabled button styles: visually distinct and no pointer hand */
+.btn[disabled],
+.btn:disabled {
+    opacity: 0.6;
+    filter: grayscale(15%);
+    cursor: not-allowed;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Prevent hover styles from affecting disabled buttons */
+.btn:not(:disabled):hover {
+    /* no-op here; individual hover rules above will apply */
+}
+
 .btn-small {
     padding: 6px 12px;
     font-size: 12px;
