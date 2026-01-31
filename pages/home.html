@@ -58,13 +58,13 @@
                 
                 <!-- Management Section -->
                 <div class="profile-dropdown-section">
-                    <a href="#" onclick="openEntityManagement(event)">Manage Entities</a>
+                    <a href="#" onclick="openEntityManagement(event); closeProfileMenu();">Manage Entities</a>
                 </div>
                 
                 <!-- Account Section -->
                 <div class="profile-dropdown-section">
                     <a href="#" onclick="openChangePasswordModal(event); closeProfileMenu();">Change Password</a>
-                    <button onclick="logout(); closeProfileMenu();">Logout</button>
+                    <button onclick="closeProfileMenu(); logout();">Logout</button>
                 </div>
             </div>
         </div>
